@@ -11,7 +11,7 @@
 <meta property="og:url" content="http://yoursite.com/2017/03/21/多终端同步hexo博客/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="多终端同步hexo">
-<meta property="og:updated_time" content="2017-03-21T08:40:24.000Z">
+<meta property="og:updated_time" content="2017-03-21T09:00:07.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="多终端同步hexo博客">
 <meta name="twitter:description" content="多终端同步hexo">
@@ -271,7 +271,7 @@
       
           
         <p>多终端同步hexo<br><a id="more"></a></p>
-<p>使用hexo是一个很棒的体验，但是由于它是一个静态博客，优点与缺点共存，它存活的生命周期更长，但没有和由于数据库连接，所以想要在多机上更新自己的博客会显得有些麻烦，但是事实上只要回想一下当初搭建时候的步骤，此时便会简化很多。</p>
+<p>使用hexo是一个很棒的体验，但是由于它是一个静态博客，优点与缺点共存，它存活的生命周期更长，但没有和由于数据库连接，所以想要在多机上更新自己的博客会显得有些麻烦，但是事实上只要回想一下当初搭建时候的步骤，此时便会简化很多。而且有<a href="https://www.zhihu.com/question/21193762" target="_blank" rel="external">多种方案可供选择</a></p>
 <p>重部署流程</p>
 <blockquote>
 <p>因为新电脑上面已经完全没有了hexo的环境，所以要重新部署一下。<br>1.先安装 <a href="http://nodejs.cn" target="_blank" rel="external">Node.js</a> 和 <a href="https://git-scm.com/downloads" target="_blank" rel="external">Git</a>，再安装完这两者后，再通过之前的步骤安装 Hexo。<br>2.在public下创建一个文件夹把整一个your_name.github.io 文件夹同步过来cd 到同步的 your_name.github.io 内， 然后再安装 Hexo：</p>
@@ -286,6 +286,7 @@
 <p>将 SSH key 添加到 Github 账户<br>在 Git Bash 中将 SSH Key 拷贝出来：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">clip &lt; ~/.ssh/id_rsa.pub</div></pre></td></tr></table></figure></p>
 <p>此时，SSH Key 已经在我们的剪切板里了。然后登录 Github 帐号，依次点击自己的头像，Settings，SSH and GPG keys， Add SSH key， 在 Title 这里输入 Key 的label，比如 your_name - PC，然后在 Key 里面把 SSH Key 粘贴进去，点击 Add SSH key 大功告成。<br>测试 SSH 连接，在 Git Bash 中敲入<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ssh -T git@github.com</div></pre></td></tr></table></figure></p>
 <p>应该可以看到提示你成功的信息。<br>Hexo 部署：执行hexo deploy 应该就可以大功告成了。</p>
+<p>另外附上一种高手方法，新手慎用：<a href="https://github.com/zjhou/E2P" target="_blank" rel="external">自动部署更新博客</a></p>
 <p>​        </p>
 
       
@@ -344,7 +345,7 @@
         <p><span>本文标题:</span><a href="/2017/03/21/多终端同步hexo博客/">多终端同步hexo博客</a></p>
         <p><span>文章作者:</span><a href="/" title="访问 Peter pan 的个人博客">Peter pan</a></p>
         <p><span>发布时间:</span>2017年03月21日 - 16时34分</p>
-        <p><span>最后更新:</span>2017年03月21日 - 16时40分</p>
+        <p><span>最后更新:</span>2017年03月21日 - 17时00分</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2017/03/21/多终端同步hexo博客/" title="多终端同步hexo博客">http://yoursite.com/2017/03/21/多终端同步hexo博客/</a>
             <span class="copy-path" data-clipboard-text="原文: http://yoursite.com/2017/03/21/多终端同步hexo博客/　　作者: Peter pan" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
