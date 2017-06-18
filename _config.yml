@@ -70,7 +70,7 @@ theme: spfk
 deploy:
   type: git 
 
-  repo: https://github.com/Peterpan0927/Peterpan0927.github.io
+  repo: git@github.com:Peterpan0927/Peterpan0927.github.io.git
 
   branch: master
 
@@ -80,6 +80,6 @@ backup:
 
   theme: spfk
 
-  repo: https://github.com/Peterpan0927/Peterpan0927.github.io
+  repo: git@github.com:Peterpan0927/Peterpan0927.github.io.git
 
   branch: markdown
