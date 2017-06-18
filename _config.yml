@@ -74,8 +74,11 @@ deploy:
 
   branch: master
 
+
+
+
 backup:
-
   type: git
-
-  repo: git@github.com:Peterpan0927/Peterpan0927.github.io.git,markdown
+  repo: 
+    github: git@github.com:Peterpan0927/Peterpan0927.github.io.git,markdown
+    
