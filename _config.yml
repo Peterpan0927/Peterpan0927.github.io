@@ -78,6 +78,4 @@ backup:
 
   type: git
 
-  theme: spfk
-
   repo: git@github.com:Peterpan0927/Peterpan0927.github.io.git,markdown
