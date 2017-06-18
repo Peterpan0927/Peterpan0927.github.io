@@ -80,4 +80,4 @@ backup:
 
   theme: spfk
 
-  repo: git@github.com:Peterpan0927/Peterpan0927.github.io.git,dev
+  repo: git@github.com:Peterpan0927/Peterpan0927.github.io.git,markdown
