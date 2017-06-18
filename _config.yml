@@ -80,4 +80,6 @@ backup:
 
   theme: spfk
 
-  repo: https://github.com/Peterpan0927/Peterpan0927.github.io,markdown
+  repo: https://github.com/Peterpan0927/Peterpan0927.github.io
+
+  branch: markdown
