@@ -135,7 +135,7 @@
 
     </div>
     <div id="toc">
-      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Pwnable-tw题解"><span class="toc-number">1.</span> <span class="toc-text">Pwnable.tw题解</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#start"><span class="toc-number">1.1.</span> <span class="toc-text">start</span></a></li></ol></li></ol>
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#pwnabletw题解"><span class="toc-number">1.</span> <span class="toc-text"> Pwnable.tw题解</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#start"><span class="toc-number">1.1.</span> <span class="toc-text"> start</span></a></li></ol></li></ol>
     </div>
   </span>
 </div>
@@ -176,8 +176,10 @@
   <div class="content" itemprop="articleBody">
     <p>simple pwn</p>
 <a id="more"></a>
-<h1 id="Pwnable-tw题解"><a href="#Pwnable-tw题解" class="headerlink" title="Pwnable.tw题解"></a>Pwnable.tw题解</h1><p>最近重建了博客，放了一下之前写的，通过科学上网体验更佳，有些图我用Twitter做的外链</p>
-<h2 id="start"><a href="#start" class="headerlink" title="start"></a>start</h2><p>这道题目网上有很多的题解，但是基本都没有说的很清楚，所以我决定以非常入门，非常清晰的思路去讲解一下这道<code>Pwn</code>的入门题目：</p>
+<h1 id="pwnabletw题解"><a class="markdownIt-Anchor" href="#pwnabletw题解"></a> Pwnable.tw题解</h1>
+<p>最近重建了博客，放了一下之前写的，通过科学上网体验更佳，有些图我用Twitter做的外链</p>
+<h2 id="start"><a class="markdownIt-Anchor" href="#start"></a> start</h2>
+<p>这道题目网上有很多的题解，但是基本都没有说的很清楚，所以我决定以非常入门，非常清晰的思路去讲解一下这道<code>Pwn</code>的入门题目：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">public _start</span><br><span class="line">_start proc near</span><br><span class="line">push    esp</span><br><span class="line">push    offset _exit</span><br><span class="line">xor     eax, eax</span><br><span class="line">xor     ebx, ebx</span><br><span class="line">xor     ecx, ecx</span><br><span class="line">xor     edx, edx</span><br><span class="line">push    3A465443h</span><br><span class="line">push    20656874h</span><br><span class="line">push    20747261h</span><br><span class="line">push    74732073h</span><br><span class="line">push    2774654Ch</span><br><span class="line">mov     ecx, esp        ; addr</span><br><span class="line">mov     dl, 14h         ; len</span><br><span class="line">mov     bl, 1           ; fd</span><br><span class="line">mov     al, 4</span><br><span class="line">int     80h             ; LINUX - sys_write</span><br><span class="line">xor     ebx, ebx</span><br><span class="line">mov     dl, 3Ch</span><br><span class="line">mov     al, 3</span><br><span class="line">int     80h             ; LINUX - sys_read</span><br><span class="line">add     esp, 14h</span><br><span class="line">retn</span><br></pre></td></tr></table></figure>
 <p>直接来上汇编代码吧，这其中有三个系统调用，并且没有<code>main</code>函数，所以应该是内联汇编写的，大概翻译一下就是：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//read 和 write 系统调用都是采用中断的方式调用的</span></span><br><span class="line">write(<span class="number">1</span>,buf,<span class="number">0x14</span>);</span><br><span class="line">read(<span class="number">0</span>,buf,<span class="number">0x3c</span>);</span><br><span class="line"><span class="built_in">exit</span>();</span><br></pre></td></tr></table></figure>
@@ -197,7 +199,7 @@
 <p><a href="https://blog.csdn.net/qq_35661990/article/details/82913196" target="_blank" rel="noopener">https://blog.csdn.net/qq_35661990/article/details/82913196</a></p>
 </blockquote>
 <p>CSDN上还有一些其他题解，要么就是没讲到这个点上，要么就是说的是错的，所以在这里我着重强调了一下</p>
-<p>接下来我们又有一次输入的机会，因为同样有<code>add esp, 0x14</code>，所以同样要构造<code>&#39;A&#39; * 20</code>，接下来应该是<code>shellcode</code>的地址，也就是一个指向自身地址+<code>0x4</code>的值，而<code>esp</code>刚好满足这个条件，但是还要根据<code>offset</code>调整一下，我画张图应该就能理解了：</p>
+<p>接下来我们又有一次输入的机会，因为同样有<code>add esp, 0x14</code>，所以同样要构造<code>'A' * 20</code>，接下来应该是<code>shellcode</code>的地址，也就是一个指向自身地址+<code>0x4</code>的值，而<code>esp</code>刚好满足这个条件，但是还要根据<code>offset</code>调整一下，我画张图应该就能理解了：</p>
 <p><img src="https://s2.ax1x.com/2019/06/21/ZSYVr6.png" alt></p>
 <p>我自己假设了一些地址，就是为了更方便理解，这样子我相信大家应该都不会有什么疑惑了，顺带提一点，我们的<code>shellcode</code>长度不能超过<code>0x3c-0x14-0x4</code></p>
 <p>然后放一下我的poc吧：</p>
@@ -227,7 +229,7 @@
     </div>
 
     <div id="toc-footer" style="display: none">
-      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Pwnable-tw题解"><span class="toc-number">1.</span> <span class="toc-text">Pwnable.tw题解</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#start"><span class="toc-number">1.1.</span> <span class="toc-text">start</span></a></li></ol></li></ol>
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#pwnabletw题解"><span class="toc-number">1.</span> <span class="toc-text"> Pwnable.tw题解</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#start"><span class="toc-number">1.1.</span> <span class="toc-text"> start</span></a></li></ol></li></ol>
     </div>
 
     <div id="share-footer" style="display: none">
