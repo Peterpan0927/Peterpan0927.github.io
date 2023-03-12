@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head><meta name="generator" content="Hexo 3.9.0">
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="the pic can not show up but if you really wanna see you can use the pic link, that should be fine.I am a fresh guy in this area and this is my first blog so the logic may be kind of confusing,sorry ab">
+<meta name="keywords" content="Browser">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JavaScript in V8">
+<meta property="og:url" content="https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/index.html">
+<meta property="og:site_name" content="Peterpan0927&#39;s Blog">
+<meta property="og:description" content="the pic can not show up but if you really wanna see you can use the pic link, that should be fine.I am a fresh guy in this area and this is my first blog so the logic may be kind of confusing,sorry ab">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g5p0lyctysj314i0k2mz9.jpg">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g4tednkcy5j31jk143n4p.jpg">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g4teksxikoj30fo066gmc.jpg">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g4telplxhwj30e006oq3m.jpg">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g5ozqm0ryfj30yw0rqq8t.jpg">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g5ozr7vuxtj30zk0pqq8o.jpg">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g5q1i4pgi1j326k0uqaf4.jpg">
+<meta property="og:updated_time" content="2020-04-02T13:54:13.208Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JavaScript in V8">
+<meta name="twitter:description" content="the pic can not show up but if you really wanna see you can use the pic link, that should be fine.I am a fresh guy in this area and this is my first blog so the logic may be kind of confusing,sorry ab">
+<meta name="twitter:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g5p0lyctysj314i0k2mz9.jpg">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/P.png">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>JavaScript in V8</title>
+    <!-- styles -->
+    <link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/lib/meslo-LG/styles.css">
+    <link rel="stylesheet" href="/lib/justified-gallery/justifiedGallery.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- rss -->
+    
+    
+    <!-- jquery -->
+    <script src="/lib/jquery/jquery.min.js"></script>
+</head>
+
+<body>
+    <div class="banner">
+<div id="blogtitel" class="blogtitel">Peterpan0927&#39;s Blog</div>
+<ul id="wrapper" class="wrapper">
+  <div class="sun">
+    <div class="star"></div>
+  </div>
+  <div class="mercury">
+    <div class="planet">
+      <div class="shadow"></div>
+    </div>
+  </div>
+  <div class="venus">
+    <div class="planet">
+      <div class="shadow"></div>
+    </div>
+  </div>
+  <div class="earth">
+    <div class="planet"><div class="shadow"></div></div>
+  </div>
+  <div class="mars">
+    <div class="planet"><div class="shadow"></div></div>
+  </div>
+  <div class="jupiter">
+    <div class="planet"><div class="shadow"></div></div>
+  </div>
+</ul>
+</div>
+
+    <div class="background">
+      
+        <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="https://github.com/Peterpan0927">Github</a></li>
+         
+          <li><a href="https://weibo.com/p/1005055999539768?is_all=1">Weibo</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2019/07/23/iOS12-2越狱漏洞分析/"><i class="fa fa-chevron-left" aria-hidden="true" onmouseover='$("#i-prev").toggle();' onmouseout='$("#i-prev").toggle();'></i></a></li>
+        
+        
+        <li><a class="icon" href="/2019/06/21/Pwnable-tm题解/"><i class="fa fa-chevron-right" aria-hidden="true" onmouseover='$("#i-next").toggle();' onmouseout='$("#i-next").toggle();'></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up" aria-hidden="true" onmouseover='$("#i-top").toggle();' onmouseout='$("#i-top").toggle();'></i></a></li>
+        <li><a class="icon" href="#"><i class="fa fa-share-alt" aria-hidden="true" onmouseover='$("#i-share").toggle();' onmouseout='$("#i-share").toggle();' onclick='$("#share").toggle();return false;'></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/"><i class="fa fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/&text=JavaScript in V8"><i class="fa fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/&title=JavaScript in V8"><i class="fa fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/&is_video=false&description=JavaScript in V8"><i class="fa fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=JavaScript in V8&body=Check out this article: https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/"><i class="fa fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/&title=JavaScript in V8"><i class="fa fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/&title=JavaScript in V8"><i class="fa fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/&title=JavaScript in V8"><i class="fa fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/&title=JavaScript in V8"><i class="fa fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/&name=JavaScript in V8&description=&lt;p&gt;the pic can not show up but if you really wanna see you can use the pic link, that should be fine.I am a fresh guy in this area and this is my first blog so the logic may be kind of confusing,sorry about that.&lt;/p&gt;"><i class="fa fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#JavaScript-Memory-Layout"><span class="toc-number">1.</span> <span class="toc-text">JavaScript Memory Layout</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#hidden-class"><span class="toc-number">1.1.</span> <span class="toc-text">hidden class</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#inline-cache"><span class="toc-number">1.2.</span> <span class="toc-text">inline cache</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Procedure-in-V8"><span class="toc-number">1.3.</span> <span class="toc-text">Procedure in V8</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Stable-mode-and-Dictionary-mode"><span class="toc-number">1.4.</span> <span class="toc-text">Stable mode and Dictionary mode</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Speculation-Guards"><span class="toc-number">1.5.</span> <span class="toc-text">Speculation Guards</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#bypass-constantfold-in-exp"><span class="toc-number">1.6.</span> <span class="toc-text">bypass constantfold in exp</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Links"><span class="toc-number">2.</span> <span class="toc-text">Links</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+      
+      <div class="content index width mx-auto px2 my4">
+          
+          <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        JavaScript in V8
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">Peterpan0927's Blog</span>
+      </span>
+      
+    <div class="postdate">
+        <time datetime="2019-07-08T09:37:13.000Z" itemprop="datePublished">2019-07-08</time>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link" href="/tags/Browser/">Browser</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>the pic can not show up but if you really wanna see you can use the pic link, that should be fine.I am a fresh guy in this area and this is my first blog so the logic may be kind of confusing,sorry about that.</p>
+<a id="more"></a>
+<h1 id="JavaScript-Memory-Layout"><a href="#JavaScript-Memory-Layout" class="headerlink" title="JavaScript Memory Layout"></a>JavaScript Memory Layout</h1><p><code>JavaScript</code>is a dynamic language,which means its property can be added or deleted dynamically,most of the JavaScript interpreter use a hash func to calculate the memory address to store the object struct.Obviously it can waste a lot of computional resources thus that’s why js is slow.</p>
+<h2 id="hidden-class"><a href="#hidden-class" class="headerlink" title="hidden class"></a>hidden class</h2><p>In order to optimize，V8 add the hidden class which is quite simple to understand.When a class is defined ,we store a pointer point to the <code>hidden class</code>（the pointer is the Map），everytime we add the new property，it would create a new <code>hidden class</code>，this time we use the hidden class and the offset to get the address, that’s quite similar to the  <code>Java runtime</code> and <code>cpp vtable</code>.</p>
+<p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g5p0lyctysj314i0k2mz9.jpg" alt></p>
+<p>This would lead to another question——&gt; How about two instances with the same properties but add in different order</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Test</span></span>&#123;&#125;</span><br><span class="line"><span class="keyword">var</span> obj1 = <span class="keyword">new</span> Test();</span><br><span class="line"><span class="keyword">var</span> obj2 = <span class="keyword">new</span> Test();</span><br><span class="line"></span><br><span class="line">obj1.x=<span class="number">1</span>;</span><br><span class="line">obj1.y=<span class="number">2</span>;</span><br><span class="line"></span><br><span class="line">obj2.y=<span class="number">2</span>;</span><br><span class="line">obj2.x=<span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+<p>Why would the two objects have different hidden class?</p>
+<h2 id="inline-cache"><a href="#inline-cache" class="headerlink" title="inline cache"></a>inline cache</h2><p>The reason here is because of the cache.When we access the same func or property a lot of times,it’s really a waste of time to calculate the address every time,we will just use the address stored in the pointer with the offset instead.So if  <code>obj1</code> and <code>obj2</code>  has the same struct,we can’t get the right information we want.It’s similar to the <code>cached_bucket</code> in OC if you have once wrote the ROP by <code>Objective-C</code>.</p>
+<p>Actually,those reasons could be quite simple if we are good at drawing inferences about other cases from one instance.</p>
+<h2 id="Procedure-in-V8"><a href="#Procedure-in-V8" class="headerlink" title="Procedure in V8"></a>Procedure in V8</h2><p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g4tednkcy5j31jk143n4p.jpg" alt></p>
+<p>Above is the outline of how V8 engine is working,from the source code to AST,and then TurboFan produce the high speed machine code,we can see that through the <code>runtime function</code>.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">f</span>(<span class="params">o</span>)</span>&#123;</span><br><span class="line">true<span class="keyword">var</span> obj = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>];</span><br><span class="line">true<span class="keyword">var</span> x = <span class="built_in">Math</span>.ceil(<span class="built_in">Math</span>.random());</span><br><span class="line">true<span class="keyword">return</span> obj[x+o];</span><br><span class="line">&#125;</span><br><span class="line">%DisassembleFunction(f);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span> ; i &lt; <span class="number">0x10000</span> ; i++)&#123;</span><br><span class="line">truef(i);</span><br><span class="line">&#125;</span><br><span class="line">%DisassembleFunction(f);</span><br></pre></td></tr></table></figure>
+<p>use <code>v8 --allow-natives-syntax xx.js</code> to run the code above,you can find the changes clearly：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g4teksxikoj30fo066gmc.jpg" alt="before"></p>
+<p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g4telplxhwj30e006oq3m.jpg" alt="after"></p>
+<p>Besides,v8 provides a large quantity of runtime functions, the directory is at  <code>src/runtime</code>,or you can just grep.</p>
+<h2 id="Stable-mode-and-Dictionary-mode"><a href="#Stable-mode-and-Dictionary-mode" class="headerlink" title="Stable mode and Dictionary mode"></a>Stable mode and Dictionary mode</h2><p>we can find something weird through a benchmark:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">createObjects</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> [</span><br><span class="line">        &#123;<span class="attr">x</span>: <span class="number">1</span>, <span class="attr">y</span>: <span class="number">2</span>, <span class="attr">z</span>: <span class="number">3</span>&#125;, </span><br><span class="line">        &#123;<span class="attr">a</span>: <span class="number">1</span>, <span class="attr">b</span>: <span class="number">2</span>, <span class="attr">c</span>: <span class="number">3</span>&#125;</span><br><span class="line">    ];</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">test</span>(<span class="params">obj</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> sum = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; <span class="number">100</span>; i++) &#123;</span><br><span class="line">        sum += obj.a + obj.c;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> sum;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//case 1</span></span><br><span class="line"><span class="keyword">var</span> pair = createObjects();</span><br><span class="line"><span class="keyword">delete</span> pair[<span class="number">0</span>].y;</span><br><span class="line">test(pair[<span class="number">1</span>]);</span><br><span class="line"></span><br><span class="line"><span class="comment">//case2</span></span><br><span class="line"><span class="keyword">var</span> pair = createObjects();</span><br><span class="line"><span class="keyword">delete</span> pair[<span class="number">1</span>].b;</span><br><span class="line">test(pair[<span class="number">1</span>]);</span><br></pre></td></tr></table></figure>
+<p>Generally,the latter is almost three or four times faster than the former.To explain that, we should know about the two modes to access the JavaScript object in V8:</p>
+<ol>
+<li>Dictionary Mode</li>
+</ol>
+<p>the slow one use the hash table to store the properties of the object so that we can also call it the hash mode</p>
+<ol>
+<li>Stable Mode</li>
+</ol>
+<p>the fast one use C struct and the offset just like the vtable in cpp.</p>
+<p>When we first create an object,it’s the fast mode.Only if we delete the property which is not added the last or add too much element dynamically,it will degenerate to the slow mode.</p>
+<p>I test that by lldb,using v8-debug-7.1.xx:</p>
+<p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g5ozqm0ryfj30yw0rqq8t.jpg" alt></p>
+<p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g5ozr7vuxtj30zk0pqq8o.jpg" alt></p>
+<p>it’s quite clear that when we delete the origin property “x”,its mode degenerate to the dictionary mode.</p>
+<h2 id="Speculation-Guards"><a href="#Speculation-Guards" class="headerlink" title="Speculation Guards"></a>Speculation Guards</h2><p>At first,we will do the speculative compilation,that’s quite simple so that’s focus on the later stage—&gt;the guards</p>
+<p>The compiler has some ways to verify its speculations,that’s just with a short piece of machine code:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">; Ensure is Smi</span><br><span class="line">test    rdi, 0x1</span><br><span class="line">jnz     bailout</span><br><span class="line"></span><br><span class="line">; Ensure has expected Map</span><br><span class="line">cmp    QWORD PTR [rdi-0x1], 0x12345601</span><br><span class="line">jne    bailout</span><br></pre></td></tr></table></figure>
+<p>i have’t talked about how v8 verifies the type, you can search about the <code>tagged pointer</code>, maybe i will add that part later in my blog.OK,that’s move on, if the check fails ,it will perform a bailout to interpreter and likely to<br>discard of the compiled code.In that case, the function would be re-compiled to perform a polymorphic property load</p>
+<h2 id="bypass-constantfold-in-exp"><a href="#bypass-constantfold-in-exp" class="headerlink" title="bypass constantfold in exp"></a>bypass constantfold in exp</h2><p>the thought to bypass constant fold is quite interesting, i think that means <code>hide your information</code>.</p>
+<p>Firstly, constant fold is normal in the optimizations of compiler,for instance:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>]</span><br><span class="line"><span class="keyword">let</span> idx = <span class="number">4</span></span><br><span class="line"><span class="keyword">return</span> arr[idx];</span><br></pre></td></tr></table></figure>
+<p>If you know a little about assembly,you will know that the code above is likely to use some registers,add operator,etc every time we enter the block.In order to be faster,the compiler will translate the code to(But actually if our index is valid , the fold won’t happen,and i don’t know why for now):</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//and after LoadElimination the LoadElement node will disappear because of the fold</span></span><br><span class="line"><span class="keyword">return</span> arr[<span class="number">4</span>];</span><br></pre></td></tr></table></figure>
+<p>It’s quite clear now so that’s get into the bypass way,maybe someone is confused about what does <code>hide your information</code> mean,if we make some operations like below:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>]</span><br><span class="line"><span class="keyword">let</span> idx = <span class="number">4</span></span><br><span class="line"><span class="comment">//the range of &amp; is (0,min(a,b))</span></span><br><span class="line">idx &amp;= <span class="number">0xfff</span>;</span><br><span class="line"><span class="keyword">return</span> arr[idx];</span><br><span class="line"><span class="comment">//Load Element node still exist means no fold happens</span></span><br></pre></td></tr></table></figure>
+<p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g5q1i4pgi1j326k0uqaf4.jpg" alt></p>
+<p>At this time the analyzer can not determine the range of checkBound(from <code>(4,4)</code>to <code>(0,4)</code>),and we also have the better choice—&gt;escape analysis:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//case 1 Off-by-One 强网杯</span></span><br><span class="line">arr = [<span class="number">1</span>]</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">foo</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> o = &#123;<span class="attr">x</span>: <span class="number">1</span>, <span class="attr">y</span>:<span class="number">2</span>&#125;;</span><br><span class="line">    <span class="keyword">return</span> arr[o.x]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//case 2 oob 35C3 CTF</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">foo</span>(<span class="params">x</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">let</span> a = [<span class="number">0.1</span>, <span class="number">0.2</span>, <span class="number">0.3</span>, <span class="number">0.4</span>];</span><br><span class="line">    <span class="keyword">let</span> o = &#123;<span class="attr">mz</span>: <span class="number">-0</span>&#125;;</span><br><span class="line">    <span class="keyword">let</span> b = <span class="built_in">Object</span>.is(<span class="built_in">Math</span>.expm1(x), o.mz);</span><br><span class="line">    <span class="keyword">return</span> a[b * <span class="number">1337</span>];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>If we just return the a[index] straight forward, we would just get the value <code>undefined</code> because of constant fold.Using an object’s property to get the index value, the analyzer sees <code>o.mz</code> as an access to a field through an object reference: it doesn’t know anything about its type because it can’t make assumptions on <code>o</code>. </p>
+<h1 id="Links"><a href="#Links" class="headerlink" title="Links"></a>Links</h1><p><a href="https://zhuanlan.zhihu.com/p/28780798" target="_blank" rel="noopener">zhihu</a></p>
+<p><a href="http://phrack.org/papers/jit_exploitation.html" target="_blank" rel="noopener">jit exploition</a></p>
+
+  </div>
+</article>
+
+
+
+      </div>
+      
+       <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="https://github.com/Peterpan0927">Github</a></li>
+         
+          <li><a href="https://weibo.com/p/1005055999539768?is_all=1">Weibo</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#JavaScript-Memory-Layout"><span class="toc-number">1.</span> <span class="toc-text">JavaScript Memory Layout</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#hidden-class"><span class="toc-number">1.1.</span> <span class="toc-text">hidden class</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#inline-cache"><span class="toc-number">1.2.</span> <span class="toc-text">inline cache</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Procedure-in-V8"><span class="toc-number">1.3.</span> <span class="toc-text">Procedure in V8</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Stable-mode-and-Dictionary-mode"><span class="toc-number">1.4.</span> <span class="toc-text">Stable mode and Dictionary mode</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Speculation-Guards"><span class="toc-number">1.5.</span> <span class="toc-text">Speculation Guards</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#bypass-constantfold-in-exp"><span class="toc-number">1.6.</span> <span class="toc-text">bypass constantfold in exp</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Links"><span class="toc-number">2.</span> <span class="toc-text">Links</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/"><i class="fa fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/&text=JavaScript in V8"><i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/&title=JavaScript in V8"><i class="fa fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/&is_video=false&description=JavaScript in V8"><i class="fa fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=JavaScript in V8&body=Check out this article: https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/"><i class="fa fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/&title=JavaScript in V8"><i class="fa fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/&title=JavaScript in V8"><i class="fa fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/&title=JavaScript in V8"><i class="fa fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/&title=JavaScript in V8"><i class="fa fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://peterpan0927.github.io/2019/07/08/JavaScript-in-V8/&name=JavaScript in V8&description=&lt;p&gt;the pic can not show up but if you really wanna see you can use the pic link, that should be fine.I am a fresh guy in this area and this is my first blog so the logic may be kind of confusing,sorry about that.&lt;/p&gt;"><i class="fa fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      <ul>
+        <li id="toc"><a class="icon" href="#" onclick='$("#toc-footer").toggle();return false;'><i class="fa fa-list fa-lg" aria-hidden="true"></i> TOC</a></li>
+        <li id="share"><a class="icon" href="#" onclick='$("#share-footer").toggle();return false;'><i class="fa fa-share-alt fa-lg" aria-hidden="true"></i> Share</a></li>
+        <li id="top" style="display:none"><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a></li>
+        <li id="menu"><a class="icon" href="#" onclick='$("#nav-footer").toggle();return false;'><i class="fa fa-bars fa-lg" aria-hidden="true"></i> Menu</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+      
+      <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy; 2023 Peterpan0927
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="https://github.com/Peterpan0927">Github</a></li>
+         
+          <li><a href="https://weibo.com/p/1005055999539768?is_all=1">Weibo</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+      <script src="/lib/justified-gallery/jquery.justifiedGallery.min.js"></script>
+<script src="/js/main.js"></script>
+<!-- Google Analytics -->
+
+<!-- Disqus Comments -->
+
+
+    </div>
+</body>
+</html>

